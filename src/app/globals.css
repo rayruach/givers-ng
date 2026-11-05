@@ -169,9 +169,11 @@ body {
 .bnav-btn i { font-size: 1.15rem; transition: transform 0.15s ease; }
 .bnav-btn.active-gifts   { color: #f02d6a; }
 .bnav-btn.active-wishes  { color: #7c3aed; }
+.bnav-btn.active-donors  { color: #f59e0b; }
 .bnav-btn.active-profile { color: #f02d6a; }
 .bnav-btn.active-gifts i,
 .bnav-btn.active-wishes i,
+.bnav-btn.active-donors i,
 .bnav-btn.active-profile i { transform: scale(1.15); }
 .bnav-badge {
   position: absolute; top: 6px; right: calc(50% - 18px);
@@ -189,6 +191,7 @@ body {
 }
 .bnav-btn.active-gifts::after,
 .bnav-btn.active-wishes::after,
+.bnav-btn.active-donors::after,
 .bnav-btn.active-profile::after { width: 20px; }
 
 .bnav-center {

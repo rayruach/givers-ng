@@ -50,4 +50,4 @@ export type ClaimRecord = {
   createdAt: number;
 };
 
-export type Tab = "gifts" | "wishes" | "profile";
+export type Tab = "gifts" | "wishes" | "donors" | "profile";

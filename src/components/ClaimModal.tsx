@@ -3,10 +3,18 @@
 import { useState, useEffect } from "react";
 import { Gift, ThankNote } from "@/lib/types";
 import { isClaimBlocked, cooldownMs, recordClaim, getRemainingClaims } from "@/lib/claims";
-import { DAILY_CLAIM_LIMIT } from "@/lib/constants";
+import { DAILY_CLAIM_LIMIT, MONTHLY_CLAIM_LIMIT, CLAIM_FEE_KOBO } from "@/lib/constants";
+
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
 
 interface Props {
   gift: Gift | null;
+  user: AuthUser | null;
   onClose: () => void;
   onSuccess: (note: ThankNote) => void;
 }
@@ -17,7 +25,7 @@ declare const PaystackPop: {
 
 const RATING_LABELS = ["", "Poor", "Fair", "Good", "Great", "Excellent!"];
 
-export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
+export default function ClaimModal({ gift, user, onClose, onSuccess }: Props) {
   const [step, setStep]           = useState<1 | 2 | 3>(1); // 3 = success/thank-you
   const [name, setName]           = useState("");
   const [email, setEmail]         = useState("");
@@ -36,12 +44,14 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
   useEffect(() => {
     if (!gift) return;
     setStep(1);
-    setName(""); setEmail(""); setPhone(""); setReason("");
-    setDelivery("pickup"); setAgreed(false); setPayError("");
+    setName(user?.name ?? "");
+    setEmail(user?.email ?? "");
+    setPhone(user?.phone ?? "");
+    setReason(""); setDelivery("pickup"); setAgreed(false); setPayError("");
     setRating(0); setThankMsg("");
     setBlocked(isClaimBlocked());
     setRemaining(getRemainingClaims());
-  }, [gift]);
+  }, [gift, user]);
 
   /* cooldown countdown */
   useEffect(() => {
@@ -69,17 +79,44 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
       return;
     }
     const currentGift = gift!;
+    const paymentRef = `givers_${Date.now()}`;
     const handler = PaystackPop.setup({
       key: paystackKey,
       email,
-      amount: 50000,
+      amount: CLAIM_FEE_KOBO, // ₦1,000
       currency: "NGN",
-      ref: `givers_${Date.now()}`,
+      ref: paymentRef,
       metadata: { name, phone, giftId: currentGift.id, delivery },
       onClose: () => setPayError("Payment window closed. Please try again."),
-      callback: (_response: { reference: string }) => {
-        recordClaim();
-        setStep(3); // show thank-you step
+      callback: async (_response: { reference: string }) => {
+        // ── Verify payment and record claim server-side ──
+        try {
+          const res = await fetch("/api/claims", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              paystackRef: paymentRef,
+              giftId: currentGift.id,
+              delivery,
+            }),
+          });
+
+          const data = await res.json();
+
+          if (!res.ok) {
+            // Payment succeeded but server rejected the claim
+            // (gift already claimed, user blocked, limit reached, payment not verified)
+            setPayError(data.error ?? "Claim failed. If you were charged, please contact support.");
+            return;
+          }
+
+          // Claim recorded successfully — show thank-you step
+          recordClaim();
+          setStep(3);
+        } catch (err) {
+          console.error("Claim recording failed:", err);
+          setPayError("Network error. If you were charged, please contact support.");
+        }
       },
     });
     handler.openIframe();
@@ -159,7 +196,7 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
                 </div>
                 <h4 className="text-sm font-bold text-gray-800">Daily Limit Reached</h4>
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  You can only claim <strong className="text-gray-600">{DAILY_CLAIM_LIMIT} gifts per day</strong>. Next slot opens in:
+                  You can claim <strong className="text-gray-600">1 gift per day</strong> and up to <strong className="text-gray-600">3 per month</strong>. Your next slot opens in:
                 </p>
                 <div className="px-4 py-2.5 rounded-xl bg-warm-100 border border-warm-200 font-mono text-lg font-black text-charity-500 tracking-widest">
                   {countdown || "--:--:--"}
@@ -170,7 +207,7 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
               <form className="space-y-3 text-xs" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
                 {remaining < DAILY_CLAIM_LIMIT && (
                   <p className="text-center text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
-                    <i className="fa-solid fa-circle-info mr-1" />{remaining} of {DAILY_CLAIM_LIMIT} daily claims remaining
+                    <i className="fa-solid fa-circle-info mr-1" />{remaining} of {DAILY_CLAIM_LIMIT} daily claims remaining · {MONTHLY_CLAIM_LIMIT}/month max
                   </p>
                 )}
                 <div>
@@ -244,7 +281,7 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
                   <div className="text-xs font-bold text-gray-800">Platform Verification Fee</div>
                   <div className="text-[10px] text-gray-400 mt-0.5">One-time fee to connect you with the Giver</div>
                 </div>
-                <div className="ml-auto text-base font-black text-charity-500">₦500</div>
+                <div className="ml-auto text-base font-black text-charity-500">₦1,000</div>
               </div>
               <ul className="px-4 py-3 space-y-1.5 text-[10px] text-gray-500">
                 <li className="flex items-center gap-2"><i className="fa-solid fa-circle-check text-charity-400 w-3" /> Verifies your request is genuine</li>
@@ -270,7 +307,7 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
                 <i className="fa-solid fa-arrow-left text-[10px]" /> Back
               </button>
               <button onClick={launchPaystack} className="flex-1 py-2.5 bg-charity-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
-                <i className="fa-solid fa-lock text-[10px]" /> Pay ₦500 Securely
+                <i className="fa-solid fa-lock text-[10px]" /> Pay ₦1,000 Securely
               </button>
             </div>
             <p className="text-center text-[9px] text-gray-400 mt-2.5 flex items-center justify-center gap-1">
@@ -287,7 +324,7 @@ export default function ClaimModal({ gift, onClose, onSuccess }: Props) {
             </div>
             <h3 className="text-base font-bold text-gray-800">Request Sent!</h3>
             <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-              Your ₦500 verification fee was received. The Giver will contact you within 24 hours.
+              Your ₦1,000 verification fee was received. The Giver will contact you within 24 hours.
             </p>
 
             {/* Thank-you prompt */}

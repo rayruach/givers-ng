@@ -1,32 +1,32 @@
 import { NextResponse } from "next/server";
-import { SAMPLE_GIFTS } from "@/lib/constants";
-import { Gift, GiftStatus } from "@/lib/types";
-
-// In-memory store — replace with Prisma + DB in production
-export let gifts: Gift[] = [...SAMPLE_GIFTS];
+import { db } from "@/lib/db";
+import { giftsTable } from "@/lib/schema";
+import { eq, and, ne } from "drizzle-orm";
+import type { GiftStatus } from "@/lib/types";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const category  = searchParams.get("category");
   const state     = searchParams.get("state");
-  const status    = searchParams.get("status"); // "available" | "all"
-  const adminMode = searchParams.get("admin") === "1";
+  const admin     = searchParams.get("admin") === "1";
 
+  const conditions = [];
+
+  // Public feed only shows available gifts
+  if (!admin) {
+    conditions.push(eq(giftsTable.status, "available"));
+  }
+
+  const gifts = await db
+    .select()
+    .from(giftsTable)
+    .where(conditions.length ? conditions[0] : undefined)
+    .orderBy(giftsTable.createdAt);
+
+  // JS-level filters for category + state (simple, avoids complex query building)
   let results = gifts;
-
-  // Public feed only shows available gifts unless admin
-  if (!adminMode) {
-    results = results.filter((g) => g.status === "available");
-  }
-  if (status && status !== "all") {
-    results = results.filter((g) => g.status === status);
-  }
-  if (category && category !== "All") {
-    results = results.filter((g) => g.category === category);
-  }
-  if (state && state !== "all") {
-    results = results.filter((g) => g.city === state);
-  }
+  if (category && category !== "All") results = results.filter((g) => g.category === category);
+  if (state && state !== "all")       results = results.filter((g) => g.city === state);
 
   return NextResponse.json({ gifts: results });
 }
@@ -39,24 +39,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  const newGift: Gift = {
-    id: Date.now(),
-    title,
-    category,
-    condition: condition ?? "Gently Used",
-    city,
-    area: area ?? "",
-    donor,
-    description: description ?? "",
-    image: image ?? `https://placehold.co/600x400/f9f0eb/f02d6a?text=${encodeURIComponent(title)}`,
-    images: images ?? (image ? [image] : []),
-    timeAgo: "just now",
-    status: "available",
-    createdAt: Date.now(),
-  };
+  const [gift] = await db
+    .insert(giftsTable)
+    .values({
+      title,
+      category,
+      condition: condition ?? "Gently Used",
+      city,
+      area: area ?? "",
+      donor,
+      description: description ?? "",
+      image: image ?? `https://placehold.co/600x400/f9f0eb/f02d6a?text=${encodeURIComponent(title)}`,
+      images: images ?? (image ? [image] : []),
+      status: "available",
+    })
+    .returning();
 
-  gifts = [newGift, ...gifts];
-  return NextResponse.json({ gift: newGift }, { status: 201 });
+  return NextResponse.json({ gift }, { status: 201 });
 }
 
 export async function PATCH(req: Request) {
@@ -67,13 +66,15 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "id and status required" }, { status: 400 });
   }
 
-  const idx = gifts.findIndex((g) => g.id === id);
-  if (idx === -1) {
-    return NextResponse.json({ error: "Gift not found" }, { status: 404 });
-  }
+  const [updated] = await db
+    .update(giftsTable)
+    .set({ status })
+    .where(eq(giftsTable.id, id))
+    .returning();
 
-  gifts[idx] = { ...gifts[idx], status };
-  return NextResponse.json({ gift: gifts[idx] });
+  if (!updated) return NextResponse.json({ error: "Gift not found" }, { status: 404 });
+
+  return NextResponse.json({ gift: updated });
 }
 
 export async function DELETE(req: Request) {
@@ -81,6 +82,6 @@ export async function DELETE(req: Request) {
   const id = Number(searchParams.get("id"));
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-  gifts = gifts.filter((g) => g.id !== id);
+  await db.delete(giftsTable).where(eq(giftsTable.id, id));
   return NextResponse.json({ success: true });
 }

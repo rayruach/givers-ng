@@ -2,19 +2,25 @@
 
 import { useState, useRef, useCallback } from "react";
 import { CATEGORIES, NG_STATES } from "@/lib/constants";
+import { Gift } from "@/lib/types";
 
 interface Props {
   activeCategory: string;
   onCategory: (cat: string) => void;
   activeState: string;
   onState: (s: string) => void;
+  onClaim: (gift: Gift) => void;
+  onInfo: (gift: Gift) => void;
 }
 
-export default function Header({ activeCategory, onCategory, activeState, onState }: Props) {
+export default function Header({ activeCategory, onCategory, activeState, onState, onClaim, onInfo }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Gift[]>([]);
+  const [searching, setSearching] = useState(false);
   const trackRef  = useRef<HTMLDivElement>(null);
   const dragState = useRef({ isDown: false, startX: 0, scrollLeft: 0, moved: false });
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── drag-to-scroll ── */
   const onMouseDown = useCallback((e: React.MouseEvent) => {
@@ -58,6 +64,47 @@ export default function Header({ activeCategory, onCategory, activeState, onStat
     trackRef.current?.scrollBy({ left: amount, behavior: "smooth" });
   }
 
+  /* ── live search ── */
+  function handleSearch(value: string) {
+    setQuery(value);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    if (!value.trim()) {
+      setResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/gifts`);
+        const data = await res.json();
+        const all: Gift[] = data.gifts ?? [];
+        const q = value.toLowerCase().trim();
+        const filtered = all.filter(
+          (g) =>
+            g.title.toLowerCase().includes(q) ||
+            g.category.toLowerCase().includes(q) ||
+            g.city.toLowerCase().includes(q) ||
+            g.area.toLowerCase().includes(q) ||
+            g.donor.toLowerCase().includes(q) ||
+            g.description.toLowerCase().includes(q)
+        );
+        setResults(filtered);
+      } catch {
+        setResults([]);
+      }
+      setSearching(false);
+    }, 250);
+  }
+
+  function closeSearch() {
+    setSearchOpen(false);
+    setQuery("");
+    setResults([]);
+  }
+
   return (
     <>
       <header className="sticky top-0 z-40 glass-nav">
@@ -74,7 +121,7 @@ export default function Header({ activeCategory, onCategory, activeState, onStat
               className="font-extrabold tracking-tight text-2xl sm:text-3xl"
               style={{ color: "#f02d6a", letterSpacing: "-0.03em", lineHeight: 1 }}
             >
-              Givers
+              Givers<span style={{ color: "#d91758" }}>.ng</span>
             </span>
           </div>
 
@@ -154,30 +201,71 @@ export default function Header({ activeCategory, onCategory, activeState, onStat
                   autoFocus
                   type="text"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Search gifts, items, donors…"
                   className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 focus:outline-none"
                 />
                 {query && (
-                  <button onClick={() => setQuery("")} className="text-gray-400 hover:text-charity-500">
+                  <button onClick={() => handleSearch("")} className="text-gray-400 hover:text-charity-500">
                     <i className="fa-solid fa-xmark text-xs" />
                   </button>
                 )}
               </div>
-              <button
-                onClick={() => { setSearchOpen(false); setQuery(""); }}
-                className="text-sm font-semibold text-charity-500 shrink-0"
-              >
+              <button onClick={closeSearch} className="text-sm font-semibold text-charity-500 shrink-0">
                 Cancel
               </button>
             </div>
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-14 h-14 rounded-full bg-charity-50 flex items-center justify-center text-charity-300 text-2xl mb-3">
-                <i className="fa-solid fa-heart-pulse" />
+
+            {/* Search results */}
+            {query.trim() ? (
+              searching ? (
+                <div className="flex justify-center py-12 text-gray-300">
+                  <i className="fa-solid fa-spinner animate-spin text-xl" />
+                </div>
+              ) : results.length > 0 ? (
+                <div className="space-y-2 overflow-y-auto max-h-[70vh]">
+                  {results.map((gift) => (
+                    <div
+                      key={gift.id}
+                      className="flex items-center gap-3 p-2.5 bg-white border border-gray-100 rounded-2xl hover:border-charity-200 transition-colors cursor-pointer"
+                      onClick={() => { closeSearch(); onInfo(gift); }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={gift.image} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-100"
+                        onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/48x48/f9f0eb/f02d6a?text=G"; }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-gray-800 truncate">{gift.title}</p>
+                        <p className="text-[11px] text-gray-400 truncate">
+                          {gift.category} · {gift.area}, {gift.city}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); closeSearch(); onClaim(gift); }}
+                        className="px-3 py-1.5 bg-charity-500 text-white text-[10px] font-bold rounded-xl shrink-0"
+                      >
+                        Claim
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-14 h-14 rounded-full bg-charity-50 flex items-center justify-center text-charity-300 text-2xl mb-3">
+                    <i className="fa-solid fa-magnifying-glass" />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-500">No results found</p>
+                  <p className="text-xs text-gray-400 mt-1">Try a different keyword</p>
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-14 h-14 rounded-full bg-charity-50 flex items-center justify-center text-charity-300 text-2xl mb-3">
+                  <i className="fa-solid fa-heart-pulse" />
+                </div>
+                <p className="text-sm font-semibold text-gray-500">Find a gift near you</p>
+                <p className="text-xs text-gray-400 mt-1">Search by item name, category or location</p>
               </div>
-              <p className="text-sm font-semibold text-gray-500">Find a gift near you</p>
-              <p className="text-xs text-gray-400 mt-1">Search by item name, category or location</p>
-            </div>
+            )}
           </div>
         </div>
       )}

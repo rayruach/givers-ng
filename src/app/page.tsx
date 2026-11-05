@@ -12,17 +12,31 @@ import GiveModal  from "@/components/GiveModal";
 import WishModal  from "@/components/WishModal";
 import GrantModal from "@/components/GrantModal";
 import InfoModal  from "@/components/InfoModal";
+import AuthModal  from "@/components/AuthModal";
+import DonorsLeaderboard from "@/components/DonorsLeaderboard";
 import Toast, { ToastMessage } from "@/components/Toast";
 import { Gift, Wish, Tab, ThankNote } from "@/lib/types";
-import { SAMPLE_GIFTS } from "@/lib/constants";
+
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
 
 export default function Home() {
   const [coverVisible, setCoverVisible] = useState(true);
   const [tab, setTab]                   = useState<Tab>("gifts");
   const [category, setCategory]         = useState("All");
   const [activeState, setActiveState]   = useState("all");
-  const [gifts, setGifts]               = useState<Gift[]>(SAMPLE_GIFTS);
+  const [gifts, setGifts]               = useState<Gift[]>([]);
   const [wishes, setWishes]             = useState<Wish[]>([]);
+
+  // auth
+  const [user, setUser]                 = useState<AuthUser | null>(null);
+  const [authOpen, setAuthOpen]         = useState(false);
+  const [pendingClaim, setPendingClaim] = useState<Gift | null>(null);
+
   const [claimTarget, setClaimTarget]   = useState<Gift | null>(null);
   const [infoTarget, setInfoTarget]     = useState<Gift | null>(null);
   const [grantTarget, setGrantTarget]   = useState<Wish | null>(null);
@@ -32,11 +46,24 @@ export default function Home() {
   const [thankNotes, setThankNotes]     = useState<ThankNote[]>([]);
   const [toasts, setToasts]             = useState<ToastMessage[]>([]);
 
-  /* Load wishes from API on mount */
+  /* Load gifts, wishes, and check auth on mount */
+  function loadGifts() {
+    fetch("/api/gifts")
+      .then((r) => r.json())
+      .then((d) => setGifts(d.gifts ?? []))
+      .catch(() => {});
+  }
+
   useEffect(() => {
+    loadGifts();
     fetch("/api/wishes")
       .then((r) => r.json())
       .then((d) => setWishes(d.wishes ?? []))
+      .catch(() => {});
+    // Check if already logged in
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => { if (d.user) setUser(d.user); })
       .catch(() => {});
   }, []);
 
@@ -47,7 +74,7 @@ export default function Home() {
     setToasts((t) => t.filter((x) => x.id !== id));
   }, []);
 
-  /* filtered gifts — only show available ones in the public feed */
+  /* filtered gifts */
   const filteredGifts = gifts.filter((g) => {
     if (g.status !== "available") return false;
     const catOk   = category === "All" || g.category === category;
@@ -55,41 +82,82 @@ export default function Home() {
     return catOk && stateOk;
   });
 
+  /* ── claim gate: check auth before opening claim modal ── */
+  function handleClaim(gift: Gift) {
+    if (!user) {
+      setPendingClaim(gift);
+      setAuthOpen(true);
+    } else {
+      setClaimTarget(gift);
+    }
+  }
+
+  function handleAuthSuccess(authedUser: AuthUser) {
+    setUser(authedUser);
+    setAuthOpen(false);
+    addToast(`Welcome, ${authedUser.name.split(" ")[0]}! 🎉`);
+    // If they were trying to claim a gift, open the claim modal now
+    if (pendingClaim) {
+      setClaimTarget(pendingClaim);
+      setPendingClaim(null);
+    }
+  }
+
   /* ── handlers ── */
   function handleClaimSuccess(note: ThankNote) {
     setClaimCount((c) => c + 1);
-    setGifts((prev) => prev.filter((g) => g.id !== claimTarget?.id));
     setThankNotes((n) => [note, ...n]);
+    loadGifts();
     addToast("Request sent! The Giver will contact you within 24h. 🎁");
   }
 
   function handlePublishGift(gift: Omit<Gift, "id" | "timeAgo">) {
-    const newGift: Gift = { ...gift, id: Date.now(), timeAgo: "just now", status: "available", createdAt: Date.now() };
-    setGifts((prev) => [newGift, ...prev]);
     fetch("/api/gifts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(gift),
-    }).catch(() => {});
+    })
+      .then(() => { loadGifts(); })
+      .catch(() => {});
     addToast("Item published to the swipe stack! 🎉");
   }
 
   function handlePublishWish(wish: Wish) {
-    setWishes((w) => [wish, ...w]);
+    fetch("/api/wishes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: wish.name, item: wish.item, category: wish.category,
+        city: wish.city, urgency: wish.urgency, story: wish.story,
+      }),
+    })
+      .then(() => {
+        fetch("/api/wishes")
+          .then((r) => r.json())
+          .then((d) => setWishes(d.wishes ?? []))
+          .catch(() => {});
+      })
+      .catch(() => {});
     addToast("Your wish has been posted! 🌟");
   }
 
   function handleGrantSuccess() {
-    if (!grantTarget) return;
-    setWishes((prev) =>
-      prev.map((w) => w.id === grantTarget.id ? { ...w, granted: true } : w)
-    );
-    addToast(`You offered to grant: "${grantTarget.item}" 🌟`);
+    fetch("/api/wishes")
+      .then((r) => r.json())
+      .then((d) => setWishes(d.wishes ?? []))
+      .catch(() => {});
+    addToast("You offered to grant this wish! 🌟");
   }
 
   function handleReload() {
-    setGifts(SAMPLE_GIFTS.map((g) => ({ ...g, status: "available" as const })));
+    loadGifts();
     addToast("Stack refreshed!", "info");
+  }
+
+  function handleLogout() {
+    fetch("/api/auth/logout", { method: "POST" })
+      .then(() => { setUser(null); addToast("Signed out", "info"); })
+      .catch(() => {});
   }
 
   return (
@@ -103,6 +171,8 @@ export default function Home() {
         onCategory={setCategory}
         activeState={activeState}
         onState={setActiveState}
+        onClaim={handleClaim}
+        onInfo={(g) => setInfoTarget(g)}
       />
 
       <main
@@ -114,7 +184,7 @@ export default function Home() {
           {tab === "gifts" && (
             <SwipeStack
               gifts={filteredGifts}
-              onClaim={(g) => setClaimTarget(g)}
+              onClaim={handleClaim}
               onReload={handleReload}
               onInfo={(g) => setInfoTarget(g)}
               onGive={() => setGiveOpen(true)}
@@ -129,8 +199,15 @@ export default function Home() {
             />
           )}
 
+          {tab === "donors" && <DonorsLeaderboard />}
+
           {tab === "profile" && (
-            <ProfileTab claimCount={claimCount} thankNotes={thankNotes} />
+            <ProfileTab
+              claimCount={claimCount}
+              thankNotes={thankNotes}
+              user={user}
+              onLogout={handleLogout}
+            />
           )}
 
         </div>
@@ -141,22 +218,31 @@ export default function Home() {
         onTab={setTab}
         wishCount={wishes.filter((w) => !w.granted).length}
         claimCount={claimCount}
+        isLoggedIn={!!user}
         onGive={() => setGiveOpen(true)}
         onWish={() => { setTab("wishes"); setWishOpen(true); }}
       />
 
       {/* ── Modals ── */}
+      {authOpen && (
+        <AuthModal
+          onClose={() => { setAuthOpen(false); setPendingClaim(null); }}
+          onAuth={handleAuthSuccess}
+        />
+      )}
+
       {infoTarget && (
         <InfoModal
           gift={infoTarget}
           onClose={() => setInfoTarget(null)}
-          onClaim={(g) => { setInfoTarget(null); setClaimTarget(g); }}
+          onClaim={(g) => { setInfoTarget(null); handleClaim(g); }}
         />
       )}
 
       {claimTarget && (
         <ClaimModal
           gift={claimTarget}
+          user={user}
           onClose={() => setClaimTarget(null)}
           onSuccess={(note) => { handleClaimSuccess(note); setClaimTarget(null); }}
         />

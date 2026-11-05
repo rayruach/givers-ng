@@ -3,12 +3,21 @@
 import { ThankNote } from "@/lib/types";
 import { getRemainingClaims } from "@/lib/claims";
 
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface Props {
   claimCount: number;
   thankNotes: ThankNote[];
+  user: AuthUser | null;
+  onLogout: () => void;
 }
 
-export default function ProfileTab({ claimCount, thankNotes }: Props) {
+export default function ProfileTab({ claimCount, thankNotes, user, onLogout }: Props) {
   const avgRating =
     thankNotes.length > 0
       ? (thankNotes.reduce((s, n) => s + n.rating, 0) / thankNotes.length).toFixed(1)
@@ -21,10 +30,26 @@ export default function ProfileTab({ claimCount, thankNotes }: Props) {
       {/* Avatar + name */}
       <div className="flex flex-col items-center pt-2 pb-5 border-b border-warm-200 mb-5">
         <div className="w-20 h-20 rounded-full bg-charity-500 flex items-center justify-center text-white text-3xl shadow-lg mb-3">
-          <i className="fa-solid fa-user" />
+          {user ? (
+            <span className="font-black text-2xl">{user.name.charAt(0).toUpperCase()}</span>
+          ) : (
+            <i className="fa-solid fa-user" />
+          )}
         </div>
-        <h2 className="font-extrabold text-gray-800 text-lg">My Givers Profile</h2>
-        <p className="text-xs text-gray-400 mt-0.5">Making a difference, one gift at a time 🇳🇬</p>
+        <h2 className="font-extrabold text-gray-800 text-lg">
+          {user ? user.name : "My Givers Profile"}
+        </h2>
+        <p className="text-xs text-gray-400 mt-0.5">
+          {user
+            ? `${user.email} · Making a difference, one gift at a time 🇳🇬`
+            : "Sign in to track your claims and thank-you notes"}
+        </p>
+        {user && (
+          <button onClick={onLogout}
+            className="mt-3 px-4 py-1.5 bg-warm-100 border border-warm-200 text-gray-500 text-xs font-semibold rounded-xl hover:text-charity-500 hover:border-charity-300 transition-colors">
+            <i className="fa-solid fa-right-from-bracket mr-1.5" />Sign Out
+          </button>
+        )}
       </div>
 
       {/* Stats */}

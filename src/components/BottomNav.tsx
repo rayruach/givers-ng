@@ -8,11 +8,12 @@ interface Props {
   onTab: (t: Tab) => void;
   wishCount: number;
   claimCount: number;
+  isLoggedIn: boolean;
   onGive: () => void;
   onWish: () => void;
 }
 
-export default function BottomNav({ tab, onTab, wishCount, claimCount, onGive, onWish }: Props) {
+export default function BottomNav({ tab, onTab, wishCount, claimCount, isLoggedIn, onGive, onWish }: Props) {
   const [fabOpen, setFabOpen] = useState(false);
 
   function toggleFab() { setFabOpen((v) => !v); }
@@ -53,7 +54,7 @@ export default function BottomNav({ tab, onTab, wishCount, claimCount, onGive, o
         </button>
       </div>
 
-      {/* Nav bar */}
+      {/* Nav bar — 5 items now: Gifts, Wishes, Post, Donors, Profile */}
       <nav
         className="bottom-nav fixed bottom-0 left-0 right-0 z-40"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
@@ -84,10 +85,18 @@ export default function BottomNav({ tab, onTab, wishCount, claimCount, onGive, o
           </button>
 
           <button
+            className={`bnav-btn ${tab === "donors" ? "active-donors" : ""}`}
+            onClick={() => onTab("donors")}
+          >
+            <i className="fa-solid fa-trophy" />
+            <span>Donors</span>
+          </button>
+
+          <button
             className={`bnav-btn ${tab === "profile" ? "active-profile" : ""}`}
             onClick={() => onTab("profile")}
           >
-            <i className="fa-solid fa-user" />
+            <i className={isLoggedIn ? "fa-solid fa-user-check" : "fa-solid fa-user"} />
             <span>Profile</span>
             {claimCount > 0 && <span className="bnav-badge">{claimCount}</span>}
           </button>

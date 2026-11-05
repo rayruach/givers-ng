@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CATEGORIES, NG_STATES } from "@/lib/constants";
+import { CATEGORIES, CATEGORY_WITH_OTHER, NG_STATES } from "@/lib/constants";
 import { Wish } from "@/lib/types";
 
 interface Props {
@@ -78,7 +78,7 @@ export default function WishModal({ onClose, onPublish }: Props) {
               <label className="block text-gray-600 font-medium mb-1">Category *</label>
               <select required value={category} onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-warm-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-violet-400">
-                {[...CATEGORIES, "Other"].map((c) => <option key={c} value={c}>{c}</option>)}
+                {[...CATEGORY_WITH_OTHER].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
           </div>
