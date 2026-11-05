@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { giftsTable } from "@/lib/schema";
 import { eq, and, ne } from "drizzle-orm";
+import { getUserFromRequest } from "@/lib/auth";
 import type { GiftStatus } from "@/lib/types";
 
 export async function GET(req: Request) {
@@ -35,6 +36,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { title, category, condition, city, area, donor, description, image, images } = body;
 
+  // Auth is optional for giving — if logged in, we save their userId
+  const authUser = await getUserFromRequest(req);
+
   if (!title || !category || !city || !donor) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
@@ -42,6 +46,7 @@ export async function POST(req: Request) {
   const [gift] = await db
     .insert(giftsTable)
     .values({
+      ...(authUser ? { userId: authUser.id } : {}),
       title,
       category,
       condition: condition ?? "Gently Used",

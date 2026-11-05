@@ -92,6 +92,11 @@ export default function Home() {
     }
   }
 
+  /* ── give gate: no account required, but if logged in we pre-fill their name ── */
+  function handleGive() {
+    setGiveOpen(true);
+  }
+
   function handleAuthSuccess(authedUser: AuthUser) {
     setUser(authedUser);
     setAuthOpen(false);
@@ -187,7 +192,7 @@ export default function Home() {
               onClaim={handleClaim}
               onReload={handleReload}
               onInfo={(g) => setInfoTarget(g)}
-              onGive={() => setGiveOpen(true)}
+              onGive={handleGive}
             />
           )}
 
@@ -219,7 +224,7 @@ export default function Home() {
         wishCount={wishes.filter((w) => !w.granted).length}
         claimCount={claimCount}
         isLoggedIn={!!user}
-        onGive={() => setGiveOpen(true)}
+        onGive={handleGive}
         onWish={() => { setTab("wishes"); setWishOpen(true); }}
       />
 
@@ -250,6 +255,7 @@ export default function Home() {
 
       {giveOpen && (
         <GiveModal
+          user={user}
           onClose={() => setGiveOpen(false)}
           onPublish={handlePublishGift}
         />

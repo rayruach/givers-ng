@@ -118,7 +118,7 @@ export default function Header({ activeCategory, onCategory, activeState, onStat
               <i className="fa-solid fa-gift" style={{ fontSize: "0.85rem" }} />
             </div>
             <span
-              className="font-extrabold tracking-tight text-2xl sm:text-3xl"
+              className="font-extrabold tracking-tight text-xl sm:text-2xl"
               style={{ color: "#f02d6a", letterSpacing: "-0.03em", lineHeight: 1 }}
             >
               Givers<span style={{ color: "#d91758" }}>.ng</span>

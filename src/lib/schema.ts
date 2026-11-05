@@ -29,6 +29,7 @@ export const usersTable = pgTable("users", {
 /* ── gifts ── */
 export const giftsTable = pgTable("gifts", {
   id:          serial("id").primaryKey(),
+  userId:      integer("user_id"),
   title:       text("title").notNull(),
   category:    text("category").notNull(),
   condition:   text("condition").notNull().default("Gently Used"),

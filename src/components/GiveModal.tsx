@@ -4,22 +4,30 @@ import { useState, useRef } from "react";
 import { CATEGORIES, CATEGORY_WITH_OTHER, NG_STATES } from "@/lib/constants";
 import { Gift } from "@/lib/types";
 
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
 interface Props {
+  user?: AuthUser | null;
   onClose: () => void;
   onPublish: (gift: Omit<Gift, "id" | "timeAgo">) => void;
 }
 
 const MAX_IMAGES = 4;
 
-export default function GiveModal({ onClose, onPublish }: Props) {
+export default function GiveModal({ user, onClose, onPublish }: Props) {
   const [title, setTitle]         = useState("");
   const [category, setCategory]   = useState<string>(CATEGORIES[0]);
   const [condition, setCondition] = useState("Like New");
   const [city, setCity]           = useState<string>(NG_STATES[24]);
   const [area, setArea]           = useState("");
   const [desc, setDesc]           = useState("");
-  const [donor, setDonor]         = useState("");
-  const [images, setImages]       = useState<string[]>([]); // Cloudinary URLs
+  const [donor, setDonor]         = useState(user?.name ?? "");
+  const [images, setImages]       = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef              = useRef<HTMLInputElement>(null);
 
@@ -214,10 +222,19 @@ export default function GiveModal({ onClose, onPublish }: Props) {
 
           {/* Donor name */}
           <div>
-            <label className="block text-gray-600 font-medium mb-1">Your Name / Donor Alias *</label>
+            <label className="block text-gray-600 font-medium mb-1">
+              Your Name / Donor Alias *
+              {user && <span className="text-charity-400 font-normal ml-1">(from your account)</span>}
+            </label>
             <input required value={donor} onChange={(e) => setDonor(e.target.value)}
               placeholder="e.g. Aunty Blessing"
               className="w-full px-3.5 py-2.5 bg-warm-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-charity-400" />
+            {!user && (
+              <p className="text-[10px] text-gray-400 mt-1">
+                <i className="fa-solid fa-circle-info text-charity-300 mr-1" />
+                Sign in to appear on the Donors leaderboard and track your gifts.
+              </p>
+            )}
           </div>
 
           <div className="pt-3 flex justify-end gap-2 border-t border-gray-100">

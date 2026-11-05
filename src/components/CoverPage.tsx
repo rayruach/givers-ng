@@ -32,6 +32,7 @@ export default function CoverPage({ onDismiss }: Props) {
           gridTemplateRows: "repeat(5, 1fr)",
           gap: "3px",
           transform: "scale(1.04)",
+          pointerEvents: "none",
         }}
       >
         {MOSAIC_IMAGES.map((src, i) => (
@@ -52,11 +53,14 @@ export default function CoverPage({ onDismiss }: Props) {
         style={{
           background:
             "linear-gradient(160deg, rgba(15,5,10,0.72) 0%, rgba(180,15,60,0.55) 50%, rgba(15,5,10,0.80) 100%)",
+          pointerEvents: "none",
         }}
       />
 
       {/* Content */}
-      <div className="cover-content relative z-10 flex flex-col items-center text-center px-8 pb-12 max-w-sm w-full">
+      <div className="cover-content relative flex flex-col items-center text-center px-8 pb-12 max-w-sm w-full"
+        style={{ zIndex: 20, pointerEvents: "auto" }}
+      >
         {/* Icon badge */}
         <div
           className="mb-6 flex items-center justify-center rounded-[22px] text-white"
@@ -89,14 +93,14 @@ export default function CoverPage({ onDismiss }: Props) {
         {/* Tagline */}
         <p
           className="mb-10 leading-relaxed"
-          style={{ fontSize: "1rem", color: "rgba(255,255,255,0.80)", maxWidth: 260 }}
+          style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.85)", maxWidth: 300 }}
         >
-          Swipe. Claim. Bless.<br />
-          Give freely, receive gracefully.
+          Angels exist. Get free gifts from kind people.
         </p>
 
         {/* CTA */}
         <button
+          type="button"
           onClick={dismiss}
           className="w-full flex items-center justify-center gap-2 font-extrabold text-white rounded-2xl transition-all active:scale-95"
           style={{
@@ -105,6 +109,9 @@ export default function CoverPage({ onDismiss }: Props) {
             fontSize: "0.95rem",
             letterSpacing: "0.02em",
             border: "none",
+            cursor: "pointer",
+            touchAction: "manipulation",
+            WebkitTapHighlightColor: "transparent",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.background = "#d91758")}
           onMouseLeave={(e) => (e.currentTarget.style.background = "#f02d6a")}

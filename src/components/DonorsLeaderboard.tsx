@@ -12,17 +12,24 @@ export default function DonorsLeaderboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all gifts and aggregate by donor
+    // Fetch all gifts and aggregate by userId (for logged-in donors) or by donor name (for anonymous)
     fetch("/api/gifts?admin=1")
       .then((r) => r.json())
       .then((d) => {
         const allGifts = d.gifts ?? [];
-        const map = new Map<string, number>();
+        const map = new Map<string, { donor: string; count: number }>();
         for (const g of allGifts) {
-          map.set(g.donor, (map.get(g.donor) ?? 0) + 1);
+          // Use userId as key if available, otherwise use donor name
+          const key = g.userId ? `user_${g.userId}` : `name_${g.donor}`;
+          const existing = map.get(key);
+          if (existing) {
+            existing.count += 1;
+          } else {
+            map.set(key, { donor: g.donor, count: 1 });
+          }
         }
         const sorted = Array.from(map.entries())
-          .map(([donor, count]) => ({ donor, count }))
+          .map(([_, val]) => val)
           .sort((a, b) => b.count - a.count)
           .slice(0, 20);
         setDonors(sorted);
