@@ -1,0 +1,286 @@
+@import "tailwindcss";
+
+/* ── Tailwind v4 custom tokens ─────────────────────────────── */
+@theme {
+  /* Charity pink */
+  --color-charity-50:  #fff0f5;
+  --color-charity-100: #ffe0ec;
+  --color-charity-200: #ffc2d8;
+  --color-charity-300: #ff94ba;
+  --color-charity-400: #f9557a;
+  --color-charity-500: #f02d6a;
+  --color-charity-600: #d91758;
+  --color-charity-700: #b50f47;
+  --color-charity-800: #960f3e;
+  --color-charity-900: #7e1137;
+
+  /* Warm neutrals */
+  --color-warm-50:  #fdf8f6;
+  --color-warm-100: #f9f0eb;
+  --color-warm-200: #f3e2d8;
+  --color-warm-300: #e8ccbe;
+
+  /* Font */
+  --font-sans: 'Inter', sans-serif;
+}
+
+/* ── Base ──────────────────────────────────────────────────── */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #fdf8f6;
+  color: #1a1a2e;
+  touch-action: pan-y;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ── Glass card ────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(240, 45, 106, 0.10);
+}
+
+/* ── Glass nav ─────────────────────────────────────────────── */
+.glass-nav {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(240, 45, 106, 0.10);
+  box-shadow: 0 1px 12px rgba(240, 45, 106, 0.06);
+}
+
+/* ── Swipe card stack ──────────────────────────────────────── */
+.card-stack {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  /* header ~110px + bottom nav ~72px + swipe buttons ~80px + gaps ~40px = ~300px overhead */
+  height: clamp(340px, calc(100vh - 310px), 500px);
+}
+
+.swipe-card {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 1.5rem;
+  user-select: none;
+  cursor: grab;
+  will-change: transform;
+  box-shadow: none;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.swipe-card:active { cursor: grabbing; }
+
+.card-img-area {
+  height: 52%;
+  min-height: 150px;
+}
+@media (max-height: 700px) {
+  .card-img-area { height: 48%; min-height: 130px; }
+}
+
+/* ── Stamp overlays ────────────────────────────────────────── */
+.stamp-overlay {
+  position: absolute;
+  top: 2rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+  z-index: 30;
+}
+.stamp-claim {
+  right: 2rem;
+  color: #f02d6a;
+  border: 4px solid #f02d6a;
+  transform: rotate(15deg);
+}
+.stamp-pass {
+  left: 2rem;
+  color: #94a3b8;
+  border: 4px solid #94a3b8;
+  transform: rotate(-15deg);
+}
+
+/* ── Scrollbar hide ────────────────────────────────────────── */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Category pills ────────────────────────────────────────── */
+.cat-pill-active {
+  background: #f02d6a;
+  color: #fff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(240,45,106,0.25);
+}
+.cat-pill-inactive {
+  background: #fff;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+.cat-pill-inactive:hover { color: #f02d6a; border-color: #f02d6a; }
+
+/* ── Nav icon button ───────────────────────────────────────── */
+.nav-icon-btn {
+  width: 2.25rem; height: 2.25rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 0.75rem;
+  color: #6b7280;
+  background: #f9f0eb;
+  border: 1px solid rgba(240, 45, 106, 0.12);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.nav-icon-btn:hover { background: #ffe0ec; color: #f02d6a; border-color: rgba(240,45,106,0.3); }
+.nav-icon-btn:active { transform: scale(0.93); }
+
+/* ── Bottom nav ────────────────────────────────────────────── */
+.bottom-nav {
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(240,45,106,0.10);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
+}
+.bnav-btn {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; padding: 8px 4px 6px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.02em;
+  color: #000;
+  cursor: pointer; border: none; background: none; outline: none;
+  transition: color 0.15s ease;
+  position: relative;
+}
+.bnav-btn i { font-size: 1.15rem; transition: transform 0.15s ease; }
+.bnav-btn.active-gifts   { color: #f02d6a; }
+.bnav-btn.active-wishes  { color: #7c3aed; }
+.bnav-btn.active-profile { color: #f02d6a; }
+.bnav-btn.active-gifts i,
+.bnav-btn.active-wishes i,
+.bnav-btn.active-profile i { transform: scale(1.15); }
+.bnav-badge {
+  position: absolute; top: 6px; right: calc(50% - 18px);
+  min-width: 16px; height: 16px;
+  background: #f02d6a; color: #fff;
+  font-size: 9px; font-weight: 900; border-radius: 99px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; line-height: 1; border: 2px solid #fff;
+}
+.bnav-btn::after {
+  content: ''; display: block;
+  width: 0; height: 3px; border-radius: 99px;
+  background: currentColor;
+  transition: width 0.2s ease; margin-top: 2px;
+}
+.bnav-btn.active-gifts::after,
+.bnav-btn.active-wishes::after,
+.bnav-btn.active-profile::after { width: 20px; }
+
+.bnav-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; padding: 8px 4px 6px;
+  border: none; background: none; cursor: pointer; outline: none;
+}
+.bnav-center-btn {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #f02d6a; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(240,45,106,0.30);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative; z-index: 1;
+}
+.bnav-center-btn.open { transform: rotate(45deg); background: #6d28d9; }
+.bnav-center-label {
+  font-size: 9px; font-weight: 700; color: #000;
+  letter-spacing: 0.02em; margin-top: 3px;
+}
+
+/* ── FAB menu ──────────────────────────────────────────────── */
+.fab-option {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid rgba(240,45,106,0.15);
+  border-radius: 99px; padding: 9px 18px 9px 12px;
+  font-size: 12px; font-weight: 700; color: #374151;
+  cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  white-space: nowrap;
+  transform: translateY(20px) scale(0.9); opacity: 0;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s ease;
+}
+.fab-option .fab-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: #fff; flex-shrink: 0;
+}
+.fab-menu-open .fab-option { transform: translateY(0) scale(1); opacity: 1; }
+.fab-menu-open .fab-option:nth-child(1) { transition-delay: 0.05s; }
+.fab-menu-open .fab-option:nth-child(2) { transition-delay: 0s; }
+
+/* ── Wish card ─────────────────────────────────────────────── */
+.wish-card {
+  background: #fff;
+  border: 1px solid rgba(240,45,106,0.10);
+  border-radius: 1.25rem;
+  box-shadow: none;
+  overflow: hidden;
+  transition: transform 0.18s ease;
+}
+.wish-card:hover { transform: translateY(-1px); }
+
+.urgency-high   { background:#fff0f5; color:#f02d6a; border-color:#ffc2d8; }
+.urgency-medium { background:#fff7ed; color:#ea580c; border-color:#fed7aa; }
+.urgency-low    { background:#f0fdf4; color:#16a34a; border-color:#bbf7d0; }
+
+/* ── Cover page ────────────────────────────────────────────── */
+.cover-mosaic > div {
+  animation-name: tilePulse;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.cover-mosaic > div:nth-child(odd)  { animation-duration: 9s; }
+.cover-mosaic > div:nth-child(even) { animation-duration: 11s; animation-delay: 1.5s; }
+
+@keyframes tilePulse {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+.cover-content {
+  animation: coverFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes coverFadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cover-exit {
+  opacity: 0 !important;
+  transform: scale(1.06) !important;
+  pointer-events: none;
+}
+
+/* ── Gallery ───────────────────────────────────────────────── */
+.gallery-wrap { position: relative; width: 100%; overflow: hidden; border-radius: 0.75rem; background: #f9f0eb; }
+.gallery-track { display: flex; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); will-change: transform; }
+.gallery-track img { width: 100%; flex-shrink: 0; height: 220px; object-fit: cover; }
+.gallery-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: #ffc2d8;
+  transition: background 0.2s, width 0.2s; cursor: pointer; border: none;
+}
+.gallery-dot.active { background: #f02d6a; width: 18px; border-radius: 3px; }
