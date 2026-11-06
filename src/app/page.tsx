@@ -38,10 +38,12 @@ export default function Home() {
   const [user, setUser]                 = useState<AuthUser | null>(null);
   const [authOpen, setAuthOpen]         = useState(false);
   const [pendingApply, setPendingApply] = useState<Gift | null>(null);
+  const [pendingWish, setPendingWish]   = useState(false);
 
   // notifications
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount]     = useState(0);
+  const [focusGiftId, setFocusGiftId]     = useState<number | null>(null);
 
   // payment — for selected receivers
   const [payNotification, setPayNotification] = useState<AppNotification | null>(null);
@@ -102,6 +104,8 @@ export default function Home() {
 
   const filteredGifts = gifts.filter((g) => {
     if (g.status !== "available") return false;
+    // Don't show the logged-in user's own gifts in the swipe stack
+    if (user && g.userId === user.id) return false;
     const catOk   = category === "All" || g.category === category;
     const stateOk = activeState === "all" || g.city === activeState;
     return catOk && stateOk;
@@ -126,6 +130,18 @@ export default function Home() {
     }
   }
 
+  /* ── Wish gate: must be logged in ── */
+  function handleWish() {
+    if (!user) {
+      setTab("wishes");
+      setPendingWish(true);
+      setAuthOpen(true);
+    } else {
+      setTab("wishes");
+      setWishOpen(true);
+    }
+  }
+
   function handleAuthSuccess(authedUser: AuthUser) {
     setUser(authedUser);
     setAuthOpen(false);
@@ -133,6 +149,10 @@ export default function Home() {
     if (pendingApply) {
       setApplyTarget(pendingApply);
       setPendingApply(null);
+    }
+    if (pendingWish) {
+      setWishOpen(true);
+      setPendingWish(false);
     }
   }
 
@@ -220,6 +240,10 @@ export default function Home() {
       user={user}
       onMarkRead={markNotificationsRead}
       onPay={handlePayFromNotification}
+      onOpenGiverDashboard={(giftId) => {
+        setFocusGiftId(giftId);
+        setTab("profile");
+      }}
     />
   );
 
@@ -255,7 +279,7 @@ export default function Home() {
           {tab === "wishes" && (
             <WishesFeed
               wishes={wishes}
-              onMakeWish={() => setWishOpen(true)}
+              onMakeWish={handleWish}
               onGrant={(w) => setGrantTarget(w)}
             />
           )}
@@ -267,6 +291,8 @@ export default function Home() {
               user={user}
               onLogout={handleLogout}
               onAuthOpen={() => setAuthOpen(true)}
+              focusGiftId={focusGiftId}
+              onFocusClear={() => setFocusGiftId(null)}
             />
           )}
         </div>
@@ -279,7 +305,7 @@ export default function Home() {
         claimCount={claimCount}
         isLoggedIn={!!user}
         onGive={handleGive}
-        onWish={() => { setTab("wishes"); setWishOpen(true); }}
+        onWish={handleWish}
       />
 
       {/* ── Modals ── */}
@@ -330,6 +356,7 @@ export default function Home() {
 
       {wishOpen && (
         <WishModal
+          user={user}
           onClose={() => setWishOpen(false)}
           onPublish={handlePublishWish}
         />

@@ -16,6 +16,8 @@ interface Props {
   user: AuthUser | null;
   onLogout: () => void;
   onAuthOpen: () => void;
+  focusGiftId?: number | null;
+  onFocusClear?: () => void;
 }
 
 type SubTab = "giver" | "receiver" | "notes";
@@ -27,7 +29,7 @@ const APP_STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   paid:     { label: "Claimed",         cls: "bg-green-100 text-green-600" },
 };
 
-export default function ProfileTab({ claimCount, thankNotes, user, onLogout, onAuthOpen }: Props) {
+export default function ProfileTab({ claimCount, thankNotes, user, onLogout, onAuthOpen, focusGiftId, onFocusClear }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("giver");
   const [myApps, setMyApps] = useState<Application[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
@@ -40,6 +42,12 @@ export default function ProfileTab({ claimCount, thankNotes, user, onLogout, onA
   useEffect(() => {
     if (user && subTab === "receiver") loadMyApplications();
   }, [user, subTab]);
+
+  useEffect(() => {
+    if (focusGiftId && user) {
+      setSubTab("giver");
+    }
+  }, [focusGiftId, user]);
 
   async function loadMyApplications() {
     setLoadingApps(true);
@@ -156,7 +164,7 @@ export default function ProfileTab({ claimCount, thankNotes, user, onLogout, onA
       </div>
 
       {/* ── Giver tab: posted gifts + applications ── */}
-      {subTab === "giver" && <GiverDashboard />}
+      {subTab === "giver" && <GiverDashboard focusGiftId={focusGiftId ?? null} onFocusClear={onFocusClear} />}
 
       {/* ── Receiver tab: gifts I applied for ── */}
       {subTab === "receiver" && (

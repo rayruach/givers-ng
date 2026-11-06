@@ -126,11 +126,16 @@ export async function POST(req: Request) {
 
   // Notify giver if gift has an owner
   if (gift.userId) {
+    // Truncate reason to 80 chars for the notification preview
+    const reasonPreview = reason.trim().length > 80
+      ? reason.trim().slice(0, 80) + "..."
+      : reason.trim();
+
     await db.insert(notificationsTable).values({
       userId:  gift.userId,
       type:    "applied",
       title:   "New Application",
-      message: `${authUser.name} applied for your gift: "${gift.title}"`,
+      message: `${authUser.name} applied for your gift: "${gift.title}". Reason: "${reasonPreview}"`,
       giftId:  gift.id,
       appId:   app.id,
     });

@@ -9,7 +9,12 @@ interface GiftWithApps extends Gift {
   expanded: boolean;
 }
 
-export default function GiverDashboard() {
+interface Props {
+  focusGiftId: number | null;
+  onFocusClear?: () => void;
+}
+
+export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
   const [items, setItems] = useState<GiftWithApps[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<number | null>(null);
@@ -19,6 +24,21 @@ export default function GiverDashboard() {
   useEffect(() => {
     loadMyGifts();
   }, []);
+
+  // Auto-expand the gift that was clicked from notification
+  useEffect(() => {
+    if (focusGiftId && items.length > 0) {
+      setItems(prev => prev.map(g =>
+        g.id === focusGiftId ? { ...g, expanded: true } : g
+      ));
+      // Scroll to the gift after a brief tick
+      setTimeout(() => {
+        const el = document.getElementById(`gift-card-${focusGiftId}`);
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      if (onFocusClear) onFocusClear();
+    }
+  }, [focusGiftId, items.length]);
 
   async function loadMyGifts() {
     setLoading(true);
@@ -132,7 +152,7 @@ export default function GiverDashboard() {
     <>
     <div className="w-full space-y-3">
       {items.map((gift) => (
-        <div key={gift.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div key={gift.id} id={`gift-card-${gift.id}`} className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           {/* Gift header row */}
           <div className="flex items-center gap-3 p-4">
             <button

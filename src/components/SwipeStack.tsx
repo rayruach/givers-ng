@@ -123,7 +123,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
             <div
               key={gift.id}
               ref={isTop ? cardRef : null}
-              className="swipe-card glass-card overflow-hidden flex flex-col"
+              className="swipe-card glass-card overflow-hidden flex flex-col justify-start"
               style={{
                 transform: `scale(${scale}) translateY(${translateY}px)`,
                 zIndex: i + 10,
@@ -186,7 +186,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
               </div>
 
               {/* Info section */}
-              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between pointer-events-none overflow-hidden">
+              <div className="p-4 sm:p-5 flex flex-col pointer-events-none overflow-hidden">
                 <div>
                   <div className="text-[10px] uppercase font-bold tracking-wider text-charity-500 mb-1">
                     {gift.category}
@@ -207,7 +207,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
                     </button>
                   )}
                 </div>
-                <div className="pt-2 sm:pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
                   <span className="text-gray-500 font-medium truncate mr-2">
                     Giver: <strong className="text-gray-700">{gift.donor}</strong>
                   </span>

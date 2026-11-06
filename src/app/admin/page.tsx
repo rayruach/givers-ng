@@ -109,10 +109,10 @@ export default function AdminDashboard() {
       {/* How the platform works — reminder */}
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 space-y-1.5">
         <p className="font-bold flex items-center gap-1.5"><i className="fa-solid fa-circle-info" /> Platform Flow Reminder</p>
-        <p><span className="font-semibold">Available</span> — Gift visible in swipe stack</p>
-        <p><span className="font-semibold">Pending</span> — Someone paid ₦500, gift locked for 24h. Connect them with the donor.</p>
-        <p><span className="font-semibold">Claimed</span> — Handoff confirmed. Mark once item physically delivered.</p>
-        <p><span className="font-semibold">Refund</span> — If handoff fails, refund the ₦500 and reset gift to Available.</p>
+        <p><span className="font-semibold">Available</span>: Gift visible in swipe stack</p>
+        <p><span className="font-semibold">Pending</span>: Someone paid ₦1,000, gift locked. Connect them with the donor.</p>
+        <p><span className="font-semibold">Claimed</span>: Handoff confirmed. Mark once item physically delivered.</p>
+        <p><span className="font-semibold">Refund</span>: If handoff fails, refund the ₦1,000 and reset gift to Available.</p>
       </div>
     </div>
   );

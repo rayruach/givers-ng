@@ -13,7 +13,6 @@ interface Props {
   onInfo: (gift: Gift) => void;
   notificationBell?: React.ReactNode;
 }
-
 export default function Header({ activeCategory, onCategory, activeState, onState, onClaim, onInfo, notificationBell }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");

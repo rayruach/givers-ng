@@ -81,7 +81,7 @@ export default function ApplyModal({ gift, onClose, onSuccess }: Props) {
             {/* How it works */}
             <div className="mb-4 p-3 rounded-xl bg-blue-50 border border-blue-100 text-[11px] text-blue-700 space-y-1">
               <p className="font-bold flex items-center gap-1.5"><i className="fa-solid fa-circle-info" /> How this works</p>
-              <p>1. Submit your reason — it's free</p>
+              <p>1. Submit your reason. It is free</p>
               <p>2. The Giver reviews all applicants and picks the most compelling story</p>
               <p>3. If selected, you get a notification and proceed to pay ₦1,000</p>
             </div>

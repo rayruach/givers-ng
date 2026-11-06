@@ -5,15 +5,23 @@ import { CATEGORIES, CATEGORY_WITH_OTHER, NG_STATES } from "@/lib/constants";
 import { Wish } from "@/lib/types";
 
 interface Props {
+  user?: AuthUser | null;
   onClose: () => void;
   onPublish: (wish: Wish) => void;
 }
 
-export default function WishModal({ onClose, onPublish }: Props) {
-  const [name, setName]         = useState("");
+interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export default function WishModal({ user, onClose, onPublish }: Props) {
+  const [name, setName]         = useState(user?.name ?? "");
   const [item, setItem]         = useState("");
   const [category, setCategory] = useState<string>("Other");
-  const [city, setCity]         = useState<string>(NG_STATES[24]); // Lagos
+  const [city, setCity]         = useState<string>(NG_STATES[24]);
   const [urgency, setUrgency]   = useState<"high" | "medium" | "low">("medium");
   const [story, setStory]       = useState("");
   const [agreed, setAgreed]     = useState(false);
@@ -60,10 +68,15 @@ export default function WishModal({ onClose, onPublish }: Props) {
         <form onSubmit={handleSubmit} className="space-y-3 text-xs">
           {/* Name */}
           <div>
-            <label className="block text-gray-600 font-medium mb-1">Your Name *</label>
+            <label className="block text-gray-600 font-medium mb-1">
+              Your Name *
+              {user && <span className="text-charity-400 font-normal ml-1 text-[10px]">(from your account)</span>}
+            </label>
             <input required value={name} onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Chiamaka Obi"
-              className="w-full px-3.5 py-2.5 bg-warm-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-violet-400" />
+              readOnly={!!user}
+              className={`w-full px-3.5 py-2.5 border rounded-xl text-gray-700 focus:outline-none focus:border-charity-400 ${user ? "bg-gray-50 border-gray-100 cursor-not-allowed" : "bg-warm-50 border-gray-200"}`}
+            />
           </div>
 
           {/* Item + Category */}
