@@ -49,9 +49,15 @@ export default function Home() {
   /* Load gifts, wishes, and check auth on mount */
   function loadGifts() {
     fetch("/api/gifts")
-      .then((r) => r.json())
-      .then((d) => setGifts(d.gifts ?? []))
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) throw new Error(`API returned ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        console.log("loadGifts response:", d);
+        setGifts(d.gifts ?? []);
+      })
+      .catch((err) => console.error("loadGifts failed:", err));
   }
 
   useEffect(() => {

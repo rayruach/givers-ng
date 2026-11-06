@@ -61,8 +61,7 @@ body {
   position: relative;
   width: 100%;
   max-width: 380px;
-  /* header ~110px + bottom nav ~72px + swipe buttons ~80px + gaps ~40px = ~300px overhead */
-  height: clamp(340px, calc(100vh - 310px), 500px);
+  height: clamp(300px, calc(100vh - 340px), 460px);
 }
 
 .swipe-card {
@@ -75,15 +74,21 @@ body {
   will-change: transform;
   box-shadow: none;
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
 }
 .swipe-card:active { cursor: grabbing; }
 
 .card-img-area {
-  height: 52%;
-  min-height: 150px;
+  /* Image takes exactly 55% of the card, the rest is info */
+  flex: 0 0 55%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: #f3e2d8;
 }
-@media (max-height: 700px) {
-  .card-img-area { height: 48%; min-height: 130px; }
+@media (max-height: 680px) {
+  .card-img-area { flex: 0 0 50%; }
 }
 
 /* ── Stamp overlays ────────────────────────────────────────── */

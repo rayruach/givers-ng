@@ -142,7 +142,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
               )}
 
               {/* Image area */}
-              <div className="card-img-area relative w-full overflow-hidden bg-warm-200 pointer-events-none">
+              <div className="card-img-area relative overflow-hidden bg-warm-200 pointer-events-none">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={gift.image}
@@ -179,18 +179,27 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
                 </div>
               </div>
 
-              {/* Info section — matches original p-4 sm:p-5 flex-1 layout */}
+              {/* Info section */}
               <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between pointer-events-none overflow-hidden">
                 <div>
                   <div className="text-[10px] uppercase font-bold tracking-wider text-charity-500 mb-1">
                     {gift.category}
                   </div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-gray-800 leading-snug line-clamp-1">
+                  <h3 className="text-base sm:text-lg font-extrabold text-gray-800 leading-snug line-clamp-2">
                     {gift.title}
                   </h3>
                   <p className="text-xs text-gray-400 line-clamp-2 mt-1 leading-relaxed">
                     {gift.description}
                   </p>
+                  {gift.description && gift.description.length > 80 && (
+                    <button
+                      className="pointer-events-auto text-[10px] text-charity-400 font-semibold mt-0.5 hover:text-charity-600 transition-colors"
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                      onClick={(e) => { e.stopPropagation(); onInfo(gift); }}
+                    >
+                      View full details
+                    </button>
+                  )}
                 </div>
                 <div className="pt-2 sm:pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
                   <span className="text-gray-500 font-medium truncate mr-2">
@@ -216,6 +225,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
         <button
           onClick={() => top && onInfo(top)}
           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-blue-200 text-blue-400 hover:bg-blue-500 hover:text-white flex items-center justify-center text-base sm:text-lg shadow-md active:scale-95 transition-all"
+          title="View full details"
         >
           <i className="fa-solid fa-info" />
         </button>
