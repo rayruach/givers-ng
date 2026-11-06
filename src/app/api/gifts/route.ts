@@ -1,31 +1,39 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { giftsTable } from "@/lib/schema";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { getUserFromRequest } from "@/lib/auth";
 import type { GiftStatus } from "@/lib/types";
 
+function timeAgo(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (seconds < 60)          return "just now";
+  if (seconds < 3600)        return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400)       return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 86400 * 7)   return `${Math.floor(seconds / 86400)}d ago`;
+  return date.toLocaleDateString("en-NG");
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const category  = searchParams.get("category");
-  const state     = searchParams.get("state");
-  const admin     = searchParams.get("admin") === "1";
+  const category = searchParams.get("category");
+  const state    = searchParams.get("state");
+  const admin    = searchParams.get("admin") === "1";
 
-  const conditions = [];
-
-  // Public feed only shows available gifts
-  if (!admin) {
-    conditions.push(eq(giftsTable.status, "available"));
-  }
-
-  const gifts = await db
+  const rows = await db
     .select()
     .from(giftsTable)
-    .where(conditions.length ? conditions[0] : undefined)
-    .orderBy(giftsTable.createdAt);
+    .where(!admin ? eq(giftsTable.status, "available") : undefined)
+    .orderBy(desc(giftsTable.createdAt));
 
-  // JS-level filters for category + state (simple, avoids complex query building)
-  let results = gifts;
+  // Normalize: add timeAgo, convert Date to number, ensure images is array
+  let results = rows.map((g) => ({
+    ...g,
+    timeAgo: timeAgo(g.createdAt),
+    createdAt: g.createdAt.getTime(),
+    images: g.images ?? [],
+  }));
+
   if (category && category !== "All") results = results.filter((g) => g.category === category);
   if (state && state !== "all")       results = results.filter((g) => g.city === state);
 

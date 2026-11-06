@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { Gift } from "@/lib/types";
 
 interface Props {
@@ -13,6 +13,11 @@ interface Props {
 
 export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }: Props) {
   const [stack, setStack] = useState<Gift[]>([...gifts].reverse());
+
+  // Sync local stack when parent gifts array changes (new gift published, reload, etc.)
+  useEffect(() => {
+    setStack([...gifts].reverse());
+  }, [gifts]);
   const cardRef = useRef<HTMLDivElement | null>(null);
   const startX  = useRef(0);
   const currentX = useRef(0);
