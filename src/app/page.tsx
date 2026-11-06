@@ -116,15 +116,25 @@ export default function Home() {
     addToast("Request sent! The Giver will contact you within 24h. 🎁");
   }
 
-  function handlePublishGift(gift: Omit<Gift, "id" | "timeAgo">) {
-    fetch("/api/gifts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(gift),
-    })
-      .then(() => { loadGifts(); })
-      .catch(() => {});
-    addToast("Item published to the swipe stack! 🎉");
+  async function handlePublishGift(gift: Omit<Gift, "id" | "timeAgo">) {
+    try {
+      const res = await fetch("/api/gifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(gift),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        addToast(data.error ?? "Failed to publish item", "error");
+        return;
+      }
+
+      await loadGifts();
+      addToast("Item published to the swipe stack! 🎉");
+    } catch {
+      addToast("Network error. Please try again.", "error");
+    }
   }
 
   function handlePublishWish(wish: Wish) {
