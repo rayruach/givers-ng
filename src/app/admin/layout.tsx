@@ -12,11 +12,12 @@ const AuthCtx = createContext<{ authed: boolean; logout: () => void }>({
 export const useAdminAuth = () => useContext(AuthCtx);
 
 const NAV = [
-  { href: "/admin",        icon: "fa-gauge-high",    label: "Dashboard" },
-  { href: "/admin/gifts",  icon: "fa-gift",          label: "Gifts" },
-  { href: "/admin/claims", icon: "fa-receipt",       label: "Claims" },
-  { href: "/admin/wishes", icon: "fa-wand-magic-sparkles", label: "Wishes" },
-  { href: "/admin/users",  icon: "fa-users",         label: "Users" },
+  { href: "/admin",          icon: "fa-gauge-high",          label: "Dashboard" },
+  { href: "/admin/gifts",    icon: "fa-gift",                label: "Gifts" },
+  { href: "/admin/claims",   icon: "fa-receipt",             label: "Claims" },
+  { href: "/admin/wishes",   icon: "fa-wand-magic-sparkles", label: "Wishes" },
+  { href: "/admin/users",    icon: "fa-users",               label: "Users" },
+  { href: "/admin/refunds",  icon: "fa-rotate-left",         label: "Refunds" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

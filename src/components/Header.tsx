@@ -11,9 +11,10 @@ interface Props {
   onState: (s: string) => void;
   onClaim: (gift: Gift) => void;
   onInfo: (gift: Gift) => void;
+  notificationBell?: React.ReactNode;
 }
 
-export default function Header({ activeCategory, onCategory, activeState, onState, onClaim, onInfo }: Props) {
+export default function Header({ activeCategory, onCategory, activeState, onState, onClaim, onInfo, notificationBell }: Props) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Gift[]>([]);
@@ -137,6 +138,8 @@ export default function Header({ activeCategory, onCategory, activeState, onStat
                 <option key={s} value={s}>{s}</option>
               ))}
             </select>
+
+            {notificationBell}
 
             <button onClick={() => setSearchOpen(true)} className="nav-icon-btn" title="Search">
               <i className="fa-solid fa-magnifying-glass" />

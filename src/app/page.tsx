@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import CoverPage  from "@/components/CoverPage";
-import Header     from "@/components/Header";
-import BottomNav  from "@/components/BottomNav";
-import SwipeStack from "@/components/SwipeStack";
-import WishesFeed from "@/components/WishesFeed";
-import ProfileTab from "@/components/ProfileTab";
-import ClaimModal from "@/components/ClaimModal";
-import GiveModal  from "@/components/GiveModal";
-import WishModal  from "@/components/WishModal";
-import GrantModal from "@/components/GrantModal";
-import InfoModal  from "@/components/InfoModal";
-import AuthModal  from "@/components/AuthModal";
+import CoverPage         from "@/components/CoverPage";
+import Header            from "@/components/Header";
+import BottomNav         from "@/components/BottomNav";
+import SwipeStack        from "@/components/SwipeStack";
+import WishesFeed        from "@/components/WishesFeed";
+import ProfileTab        from "@/components/ProfileTab";
+import ApplyModal        from "@/components/ApplyModal";
+import GiveModal         from "@/components/GiveModal";
+import WishModal         from "@/components/WishModal";
+import GrantModal        from "@/components/GrantModal";
+import InfoModal         from "@/components/InfoModal";
+import AuthModal         from "@/components/AuthModal";
+import PaymentModal      from "@/components/PaymentModal";
+import NotificationBell  from "@/components/NotificationBell";
 import DonorsLeaderboard from "@/components/DonorsLeaderboard";
 import Toast, { ToastMessage } from "@/components/Toast";
-import { Gift, Wish, Tab, ThankNote } from "@/lib/types";
+import { Gift, Wish, Tab, ThankNote, AppNotification, Application } from "@/lib/types";
 
 interface AuthUser {
   id: number;
@@ -35,43 +37,61 @@ export default function Home() {
   // auth
   const [user, setUser]                 = useState<AuthUser | null>(null);
   const [authOpen, setAuthOpen]         = useState(false);
-  const [pendingClaim, setPendingClaim] = useState<Gift | null>(null);
+  const [pendingApply, setPendingApply] = useState<Gift | null>(null);
 
-  const [claimTarget, setClaimTarget]   = useState<Gift | null>(null);
-  const [infoTarget, setInfoTarget]     = useState<Gift | null>(null);
-  const [grantTarget, setGrantTarget]   = useState<Wish | null>(null);
-  const [giveOpen, setGiveOpen]         = useState(false);
-  const [wishOpen, setWishOpen]         = useState(false);
-  const [claimCount, setClaimCount]     = useState(0);
-  const [thankNotes, setThankNotes]     = useState<ThankNote[]>([]);
-  const [toasts, setToasts]             = useState<ToastMessage[]>([]);
+  // notifications
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount]     = useState(0);
 
-  /* Load gifts, wishes, and check auth on mount */
+  // payment — for selected receivers
+  const [payNotification, setPayNotification] = useState<AppNotification | null>(null);
+  const [payApplication, setPayApplication]   = useState<Application | null>(null);
+
+  // modals
+  const [applyTarget, setApplyTarget] = useState<Gift | null>(null);
+  const [infoTarget, setInfoTarget]   = useState<Gift | null>(null);
+  const [grantTarget, setGrantTarget] = useState<Wish | null>(null);
+  const [giveOpen, setGiveOpen]       = useState(false);
+  const [wishOpen, setWishOpen]       = useState(false);
+
+  const [claimCount, setClaimCount] = useState(0);
+  const [thankNotes, setThankNotes] = useState<ThankNote[]>([]);
+  const [toasts, setToasts]         = useState<ToastMessage[]>([]);
+
   function loadGifts() {
     fetch("/api/gifts")
-      .then((r) => {
-        if (!r.ok) throw new Error(`API returned ${r.status}`);
-        return r.json();
-      })
+      .then((r) => r.json())
+      .then((d) => setGifts(d.gifts ?? []))
+      .catch(() => {});
+  }
+
+  function loadNotifications() {
+    if (!user) return;
+    fetch("/api/notifications", { credentials: "include" })
+      .then((r) => r.json())
       .then((d) => {
-        console.log("loadGifts response:", d);
-        setGifts(d.gifts ?? []);
+        setNotifications(d.notifications ?? []);
+        setUnreadCount(d.unread ?? 0);
       })
-      .catch((err) => console.error("loadGifts failed:", err));
+      .catch(() => {});
   }
 
   useEffect(() => {
     loadGifts();
-    fetch("/api/wishes")
-      .then((r) => r.json())
-      .then((d) => setWishes(d.wishes ?? []))
-      .catch(() => {});
-    // Check if already logged in
-    fetch("/api/auth/me")
+    fetch("/api/wishes").then((r) => r.json()).then((d) => setWishes(d.wishes ?? [])).catch(() => {});
+    fetch("/api/auth/me", { credentials: "include" })
       .then((r) => r.json())
       .then((d) => { if (d.user) setUser(d.user); })
       .catch(() => {});
   }, []);
+
+  // Poll notifications every 30s when logged in
+  useEffect(() => {
+    if (!user) return;
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   function addToast(text: string, type: ToastMessage["type"] = "success") {
     setToasts((t) => [...t, { id: Date.now(), text, type }]);
@@ -80,7 +100,6 @@ export default function Home() {
     setToasts((t) => t.filter((x) => x.id !== id));
   }, []);
 
-  /* filtered gifts */
   const filteredGifts = gifts.filter((g) => {
     if (g.status !== "available") return false;
     const catOk   = category === "All" || g.category === category;
@@ -88,38 +107,60 @@ export default function Home() {
     return catOk && stateOk;
   });
 
-  /* ── claim gate: check auth before opening claim modal ── */
-  function handleClaim(gift: Gift) {
+  /* ── Apply gate: must be logged in ── */
+  function handleApply(gift: Gift) {
     if (!user) {
-      setPendingClaim(gift);
+      setPendingApply(gift);
       setAuthOpen(true);
     } else {
-      setClaimTarget(gift);
+      setApplyTarget(gift);
     }
   }
 
-  /* ── give gate: no account required, but if logged in we pre-fill their name ── */
+  /* ── Give gate: must be logged in ── */
   function handleGive() {
-    setGiveOpen(true);
+    if (!user) {
+      setAuthOpen(true);
+    } else {
+      setGiveOpen(true);
+    }
   }
 
   function handleAuthSuccess(authedUser: AuthUser) {
     setUser(authedUser);
     setAuthOpen(false);
     addToast(`Welcome, ${authedUser.name.split(" ")[0]}! 🎉`);
-    // If they were trying to claim a gift, open the claim modal now
-    if (pendingClaim) {
-      setClaimTarget(pendingClaim);
-      setPendingClaim(null);
+    if (pendingApply) {
+      setApplyTarget(pendingApply);
+      setPendingApply(null);
     }
   }
 
-  /* ── handlers ── */
-  function handleClaimSuccess(note: ThankNote) {
+  /* ── Pay: receiver taps Pay from notification bell ── */
+  async function handlePayFromNotification(notification: AppNotification) {
+    if (!notification.appId || !notification.giftId) return;
+    try {
+      const res = await fetch(`/api/applications?mine=1`, { credentials: "include" });
+      const data = await res.json();
+      const app = (data.applications ?? []).find((a: Application) => a.id === notification.appId);
+      if (app) {
+        setPayNotification(notification);
+        setPayApplication(app);
+      } else {
+        addToast("Application not found", "error");
+      }
+    } catch {
+      addToast("Failed to load application", "error");
+    }
+  }
+
+  function handlePaymentSuccess() {
+    setPayNotification(null);
+    setPayApplication(null);
     setClaimCount((c) => c + 1);
-    setThankNotes((n) => [note, ...n]);
     loadGifts();
-    addToast("Request sent! The Giver will contact you within 24h. 🎁");
+    loadNotifications();
+    addToast("Payment confirmed! The Giver will be in touch to arrange handoff. 🎁");
   }
 
   async function handlePublishGift(gift: Omit<Gift, "id" | "timeAgo">) {
@@ -127,17 +168,13 @@ export default function Home() {
       const res = await fetch("/api/gifts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(gift),
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        addToast(data.error ?? "Failed to publish item", "error");
-        return;
-      }
-
-      await loadGifts();
-      addToast("Item published to the swipe stack! 🎉");
+      const data = await res.json();
+      if (!res.ok) { addToast(data.error ?? "Failed to publish item", "error"); return; }
+      loadGifts();
+      addToast("Item published! 🎉");
     } catch {
       addToast("Network error. Please try again.", "error");
     }
@@ -147,44 +184,48 @@ export default function Home() {
     fetch("/api/wishes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: wish.name, item: wish.item, category: wish.category,
-        city: wish.city, urgency: wish.urgency, story: wish.story,
-      }),
+      body: JSON.stringify({ name: wish.name, item: wish.item, category: wish.category, city: wish.city, urgency: wish.urgency, story: wish.story }),
     })
-      .then(() => {
-        fetch("/api/wishes")
-          .then((r) => r.json())
-          .then((d) => setWishes(d.wishes ?? []))
-          .catch(() => {});
-      })
+      .then(() => fetch("/api/wishes").then((r) => r.json()).then((d) => setWishes(d.wishes ?? [])))
       .catch(() => {});
     addToast("Your wish has been posted! 🌟");
   }
 
   function handleGrantSuccess() {
-    fetch("/api/wishes")
-      .then((r) => r.json())
-      .then((d) => setWishes(d.wishes ?? []))
-      .catch(() => {});
+    fetch("/api/wishes").then((r) => r.json()).then((d) => setWishes(d.wishes ?? [])).catch(() => {});
     addToast("You offered to grant this wish! 🌟");
   }
 
-  function handleReload() {
-    loadGifts();
-    addToast("Stack refreshed!", "info");
-  }
+  function handleReload() { loadGifts(); addToast("Stack refreshed!", "info"); }
 
   function handleLogout() {
-    fetch("/api/auth/logout", { method: "POST" })
-      .then(() => { setUser(null); addToast("Signed out", "info"); })
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .then(() => { setUser(null); setNotifications([]); setUnreadCount(0); addToast("Signed out", "info"); })
       .catch(() => {});
   }
+
+  function markNotificationsRead(id?: number) {
+    fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(id ? { id } : { readAll: true }),
+    }).then(() => loadNotifications()).catch(() => {});
+  }
+
+  const notificationBell = (
+    <NotificationBell
+      notifications={notifications}
+      unread={unreadCount}
+      user={user}
+      onMarkRead={markNotificationsRead}
+      onPay={handlePayFromNotification}
+    />
+  );
 
   return (
     <>
       {coverVisible && <CoverPage onDismiss={() => setCoverVisible(false)} />}
-
       <Toast toasts={toasts} onRemove={removeToast} />
 
       <Header
@@ -192,8 +233,9 @@ export default function Home() {
         onCategory={setCategory}
         activeState={activeState}
         onState={setActiveState}
-        onClaim={handleClaim}
+        onClaim={handleApply}
         onInfo={(g) => setInfoTarget(g)}
+        notificationBell={notificationBell}
       />
 
       <main
@@ -201,17 +243,15 @@ export default function Home() {
         style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}
       >
         <div className="w-full max-w-md flex flex-col items-center justify-center gap-4 sm:gap-5">
-
           {tab === "gifts" && (
             <SwipeStack
               gifts={filteredGifts}
-              onClaim={handleClaim}
+              onClaim={handleApply}
               onReload={handleReload}
               onInfo={(g) => setInfoTarget(g)}
               onGive={handleGive}
             />
           )}
-
           {tab === "wishes" && (
             <WishesFeed
               wishes={wishes}
@@ -219,18 +259,16 @@ export default function Home() {
               onGrant={(w) => setGrantTarget(w)}
             />
           )}
-
           {tab === "donors" && <DonorsLeaderboard />}
-
           {tab === "profile" && (
             <ProfileTab
               claimCount={claimCount}
               thankNotes={thankNotes}
               user={user}
               onLogout={handleLogout}
+              onAuthOpen={() => setAuthOpen(true)}
             />
           )}
-
         </div>
       </main>
 
@@ -247,7 +285,7 @@ export default function Home() {
       {/* ── Modals ── */}
       {authOpen && (
         <AuthModal
-          onClose={() => { setAuthOpen(false); setPendingClaim(null); }}
+          onClose={() => { setAuthOpen(false); setPendingApply(null); }}
           onAuth={handleAuthSuccess}
         />
       )}
@@ -256,16 +294,29 @@ export default function Home() {
         <InfoModal
           gift={infoTarget}
           onClose={() => setInfoTarget(null)}
-          onClaim={(g) => { setInfoTarget(null); handleClaim(g); }}
+          onClaim={(g) => { setInfoTarget(null); handleApply(g); }}
         />
       )}
 
-      {claimTarget && (
-        <ClaimModal
-          gift={claimTarget}
+      {applyTarget && (
+        <ApplyModal
+          gift={applyTarget}
+          onClose={() => setApplyTarget(null)}
+          onSuccess={() => {
+            setApplyTarget(null);
+            loadGifts();
+            addToast("Application submitted! Wait for the Giver to choose. 📬");
+          }}
+        />
+      )}
+
+      {payNotification && payApplication && user && (
+        <PaymentModal
+          notification={payNotification}
+          application={payApplication}
           user={user}
-          onClose={() => setClaimTarget(null)}
-          onSuccess={(note) => { handleClaimSuccess(note); setClaimTarget(null); }}
+          onClose={() => { setPayNotification(null); setPayApplication(null); }}
+          onSuccess={handlePaymentSuccess}
         />
       )}
 

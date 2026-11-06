@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { claimsTable, giftsTable, usersTable } from "@/lib/schema";
+import { claimsTable, giftsTable, usersTable, applicationsTable, notificationsTable } from "@/lib/schema";
 import { eq, and, gte } from "drizzle-orm";
 import { getUserFromRequest } from "@/lib/auth";
 import type { ClaimRecord } from "@/lib/types";
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { paystackRef, giftId, delivery } = body;
+  const { paystackRef, giftId, appId, delivery } = body;
 
   if (!paystackRef || !giftId) {
     return NextResponse.json(
@@ -132,23 +132,49 @@ export async function POST(req: Request) {
     );
   }
 
-  // ── 6. Atomic gift lock (only locks if status is 'available') ──
+  // ── 6. Verify user has a selected application for this gift ──
+  if (appId) {
+    const [app] = await db
+      .select()
+      .from(applicationsTable)
+      .where(and(
+        eq(applicationsTable.id, Number(appId)),
+        eq(applicationsTable.userId, dbUser!.id),
+        eq(applicationsTable.status, "selected")
+      ));
+
+    if (!app) {
+      return NextResponse.json(
+        { error: "You do not have a selected application for this gift." },
+        { status: 403 }
+      );
+    }
+  }
+
+  // ── 7. Lock the gift (pending → claimed path starts here) ──
   const locked = await db
     .update(giftsTable)
     .set({ status: "pending" })
-    .where(and(eq(giftsTable.id, Number(giftId)), eq(giftsTable.status, "available")))
+    .where(and(eq(giftsTable.id, Number(giftId)), eq(giftsTable.status, "pending")))
     .returning();
 
-  if (locked.length === 0) {
+  // Also allow locking from available (legacy / no appId path)
+  const lockedFallback = locked.length === 0 ? await db
+    .update(giftsTable)
+    .set({ status: "pending" })
+    .where(and(eq(giftsTable.id, Number(giftId)), eq(giftsTable.status, "available")))
+    .returning() : locked;
+
+  if (lockedFallback.length === 0) {
     return NextResponse.json(
-      { error: "This gift has already been claimed by someone else." },
+      { error: "This gift is no longer available." },
       { status: 409 }
     );
   }
 
-  const gift = locked[0];
+  const gift = lockedFallback[0];
 
-  // ── 7. Record the claim with verified user data ──
+  // ── 8. Record the claim with verified user data ──
   const [record] = await db
     .insert(claimsTable)
     .values({
@@ -162,6 +188,30 @@ export async function POST(req: Request) {
       status:       "paid",
     })
     .returning();
+
+  // ── 9. Update application to "paid" and notify the giver ──
+  if (appId) {
+    await db.update(applicationsTable)
+      .set({ status: "paid", paystackRef })
+      .where(eq(applicationsTable.id, Number(appId)));
+
+    // Mark gift as claimed
+    await db.update(giftsTable)
+      .set({ status: "claimed" })
+      .where(eq(giftsTable.id, Number(giftId)));
+
+    // Notify the giver
+    if (gift.userId) {
+      await db.insert(notificationsTable).values({
+        userId:  gift.userId,
+        type:    "paid",
+        title:   "Gift Claimed!",
+        message: `${authUser.name} has paid and confirmed their claim for "${gift.title}". Arrange handoff now.`,
+        giftId:  gift.id,
+        appId:   Number(appId),
+      });
+    }
+  }
 
   return NextResponse.json({
     success: true,

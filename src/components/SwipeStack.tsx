@@ -172,7 +172,13 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
                     {gift.category}
                   </span>
                 </div>
-                <div className="absolute top-3 right-3">
+                <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                  {(gift.applicationCount ?? 0) > 0 && (
+                    <span className="px-2 py-1 bg-charity-500/90 text-white rounded-full text-[10px] font-bold flex items-center gap-1">
+                      <i className="fa-solid fa-users text-[8px]" />
+                      {gift.applicationCount} interested
+                    </span>
+                  )}
                   <span className="px-2 py-1 bg-white/90 rounded-full text-[10px] font-bold text-gray-600">
                     {gift.condition}
                   </span>

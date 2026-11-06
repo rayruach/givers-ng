@@ -27,6 +27,7 @@ export default function GiveModal({ user, onClose, onPublish }: Props) {
   const [area, setArea]           = useState("");
   const [desc, setDesc]           = useState("");
   const [donor, setDonor]         = useState(user?.name ?? "");
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [images, setImages]       = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef              = useRef<HTMLInputElement>(null);
@@ -70,7 +71,9 @@ export default function GiveModal({ user, onClose, onPublish }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onPublish({
-      title, category, condition, city, area, donor,
+      title, category, condition, city, area,
+      donor: isAnonymous ? "Anonymous" : donor,
+      isAnonymous,
       description: desc,
       image: images[0] ?? "https://placehold.co/600x400/f9f0eb/f02d6a?text=Givers",
       images: images.length ? images : [],
@@ -220,20 +223,41 @@ export default function GiveModal({ user, onClose, onPublish }: Props) {
               className="w-full px-3.5 py-2.5 bg-warm-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-charity-400" />
           </div>
 
-          {/* Donor name */}
+          {/* Donor name + anonymous toggle */}
           <div>
-            <label className="block text-gray-600 font-medium mb-1">
-              Your Name / Donor Alias *
-              {user && <span className="text-charity-400 font-normal ml-1">(from your account)</span>}
-            </label>
-            <input required value={donor} onChange={(e) => setDonor(e.target.value)}
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-gray-600 font-medium">
+                Your Name / Donor Alias *
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <span className="text-[10px] text-gray-400 font-medium">Give anonymously</span>
+                <div
+                  onClick={() => setIsAnonymous(!isAnonymous)}
+                  className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer ${isAnonymous ? "bg-charity-500" : "bg-gray-200"}`}
+                >
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${isAnonymous ? "left-4" : "left-0.5"}`} />
+                </div>
+              </label>
+            </div>
+            <input
+              required={!isAnonymous}
+              disabled={isAnonymous}
+              value={isAnonymous ? "Anonymous" : donor}
+              onChange={(e) => setDonor(e.target.value)}
               placeholder="e.g. Aunty Blessing"
-              className="w-full px-3.5 py-2.5 bg-warm-50 border border-gray-200 rounded-xl text-gray-700 focus:outline-none focus:border-charity-400" />
-            {!user && (
-              <p className="text-[10px] text-gray-400 mt-1">
-                <i className="fa-solid fa-circle-info text-charity-300 mr-1" />
-                Sign in to appear on the Donors leaderboard and track your gifts.
+              className={`w-full px-3.5 py-2.5 border rounded-xl text-gray-700 focus:outline-none focus:border-charity-400 transition-colors ${
+                isAnonymous
+                  ? "bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed"
+                  : "bg-warm-50 border-gray-200"
+              }`}
+            />
+            {isAnonymous ? (
+              <p className="text-[10px] text-charity-400 mt-1 flex items-center gap-1">
+                <i className="fa-solid fa-user-secret" />
+                Your name will show as "Anonymous" on the gift card and leaderboard. Only you can see your gifts in your dashboard.
               </p>
+            ) : (
+              <p className="text-[10px] text-gray-400 mt-1">This is how your name appears on the gift card.</p>
             )}
           </div>
 

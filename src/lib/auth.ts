@@ -1,7 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 const COOKIE_NAME = "givers-auth";
+
+function getSecret() {
+  const s = process.env.JWT_SECRET;
+  if (!s) throw new Error("JWT_SECRET environment variable is not set");
+  return new TextEncoder().encode(s);
+}
 
 export interface AuthUser {
   id: number;
@@ -15,13 +20,13 @@ export async function createToken(user: AuthUser): Promise<string> {
   return new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
-    .sign(secret);
+    .sign(getSecret());
 }
 
 /** Verify a JWT and return the user payload */
 export async function verifyToken(token: string): Promise<AuthUser | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as AuthUser;
   } catch {
     return null;
