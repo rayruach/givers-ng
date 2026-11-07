@@ -25,8 +25,8 @@ export default function WishesFeed({ wishes, onMakeWish, onGrant }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-1">
         <div>
-          <h2 className="text-sm font-extrabold text-gray-800">Community Wishes</h2>
-          <p className="text-[10px] text-gray-400 mt-0.5">Grant a wish, bless someone today</p>
+          <h2 className="text-sm font-extrabold text-black">Community Wishes</h2>
+          <p className="text-[10px] text-gray-600 mt-0.5">Grant a wish, bless someone today</p>
         </div>
         <button
           onClick={onMakeWish}
@@ -38,11 +38,11 @@ export default function WishesFeed({ wishes, onMakeWish, onGrant }: Props) {
 
       {wishes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 rounded-full bg-charity-50 text-charity-300 flex items-center justify-center text-3xl mb-3">
+          <div className="w-16 h-16 rounded-full bg-charity-50 text-charity-400 flex items-center justify-center text-3xl mb-3">
             <i className="fa-solid fa-wand-magic-sparkles" />
           </div>
-          <h3 className="text-sm font-bold text-gray-700">No wishes yet</h3>
-          <p className="text-xs text-gray-400 mt-1 leading-relaxed max-w-[220px]">
+          <h3 className="text-sm font-bold text-black">No wishes yet</h3>
+          <p className="text-xs text-gray-600 mt-1 leading-relaxed max-w-[220px]">
             Be the first to make a wish. Someone may grant it.
           </p>
           <button
@@ -58,13 +58,13 @@ export default function WishesFeed({ wishes, onMakeWish, onGrant }: Props) {
             <div key={w.id} className="wish-card">
               <div className="p-4">
                 <div className="flex items-start gap-3 mb-2">
-                  <div className="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center text-white font-extrabold text-sm shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-charity-500 flex items-center justify-center text-white font-extrabold text-sm shrink-0">
                     {w.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-800 truncate">{w.name}</div>
-                    <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                      <i className="fa-solid fa-location-dot text-violet-400 text-[9px]" />
+                    <div className="text-xs font-bold text-black truncate">{w.name}</div>
+                    <div className="text-[10px] text-gray-600 flex items-center gap-1">
+                      <i className="fa-solid fa-location-dot text-charity-400 text-[9px]" />
                       {w.city} · {w.timeAgo}
                     </div>
                   </div>
@@ -75,8 +75,8 @@ export default function WishesFeed({ wishes, onMakeWish, onGrant }: Props) {
                   </span>
                 </div>
 
-                <h3 className="text-xs font-extrabold text-gray-800 mb-1">{w.item}</h3>
-                <p className="text-[11px] text-gray-500 leading-relaxed line-clamp-2">{w.story}</p>
+                <h3 className="text-xs font-extrabold text-black mb-1">{w.item}</h3>
+                <p className="text-[11px] text-gray-700 leading-relaxed line-clamp-2">{w.story}</p>
 
                 <div className="mt-3">
                   {w.granted ? (
@@ -87,7 +87,7 @@ export default function WishesFeed({ wishes, onMakeWish, onGrant }: Props) {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => onGrant(w)}
-                        className="flex-1 py-2 bg-violet-600 text-white font-bold text-xs rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                        className="flex-1 py-2 bg-charity-500 text-white font-bold text-xs rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1.5"
                       >
                         <i className="fa-solid fa-heart text-[10px]" /> Grant this Wish
                       </button>

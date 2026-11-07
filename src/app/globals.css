@@ -173,8 +173,8 @@ body {
 }
 .bnav-btn i { font-size: 1.15rem; transition: transform 0.15s ease; }
 .bnav-btn.active-gifts   { color: #f02d6a; }
-.bnav-btn.active-wishes  { color: #7c3aed; }
-.bnav-btn.active-donors  { color: #f59e0b; }
+.bnav-btn.active-wishes  { color: #f02d6a; }
+.bnav-btn.active-donors  { color: #f02d6a; }
 .bnav-btn.active-profile { color: #f02d6a; }
 .bnav-btn.active-gifts i,
 .bnav-btn.active-wishes i,

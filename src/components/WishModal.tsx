@@ -46,17 +46,17 @@ export default function WishModal({ user, onClose, onPublish }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto relative shadow-2xl border border-violet-100">
+      <div className="bg-white w-full max-w-md rounded-2xl p-6 max-h-[90vh] overflow-y-auto relative shadow-2xl border border-charity-100">
 
         {/* Close */}
         <button onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-violet-50 text-gray-500 hover:text-violet-500">
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-warm-100 text-gray-500 hover:text-charity-500">
           <i className="fa-solid fa-xmark text-sm" />
         </button>
 
         {/* Header */}
         <div className="mb-4">
-          <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-white mb-3">
+          <div className="w-10 h-10 rounded-xl bg-charity-500 flex items-center justify-center text-white mb-3">
             <i className="fa-solid fa-wand-magic-sparkles" />
           </div>
           <h3 className="text-lg font-bold text-gray-800">Make a Wish</h3>
@@ -141,7 +141,7 @@ export default function WishModal({ user, onClose, onPublish }: Props) {
           <div className="pt-3 flex justify-end gap-2 border-t border-gray-100">
             <button type="button" onClick={onClose} className="px-4 py-2 text-gray-400 font-medium">Cancel</button>
             <button type="submit"
-              className="px-5 py-2.5 bg-violet-600 text-white font-bold rounded-xl flex items-center gap-2">
+              className="px-5 py-2.5 bg-charity-500 text-white font-bold rounded-xl flex items-center gap-2">
               <i className="fa-solid fa-wand-magic-sparkles text-[10px]" /> Post Wish
             </button>
           </div>

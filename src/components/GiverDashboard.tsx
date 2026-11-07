@@ -128,7 +128,7 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-16 text-gray-300">
+      <div className="flex justify-center py-16 text-gray-400">
         <i className="fa-solid fa-spinner animate-spin text-2xl" />
       </div>
     );
@@ -141,7 +141,7 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
           <i className="fa-solid fa-gift" />
         </div>
         <h3 className="text-sm font-bold text-gray-700">No gifts posted yet</h3>
-        <p className="text-xs text-gray-400 mt-1 max-w-[220px] leading-relaxed">
+        <p className="text-xs text-gray-600 mt-1 max-w-[220px] leading-relaxed">
           Post your first item using the + button and it will appear here with all its applications.
         </p>
       </div>
@@ -163,8 +163,8 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
               <img src={gift.image} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-100"
                 onError={(e) => { (e.target as HTMLImageElement).src = "https://placehold.co/48x48/f9f0eb/f02d6a?text=G"; }} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-800 truncate">{gift.title}</p>
-                <p className="text-[11px] text-gray-400">{gift.area}, {gift.city} · {gift.timeAgo}</p>
+                <p className="text-sm font-bold text-black truncate">{gift.title}</p>
+                <p className="text-[11px] text-gray-700">{gift.area}, {gift.city} · {gift.timeAgo}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[gift.status]?.cls}`}>
@@ -216,8 +216,8 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
           {gift.expanded && (
             <div className="border-t border-gray-100">
               {gift.applications.length === 0 ? (
-                <div className="px-4 py-6 text-center text-xs text-gray-400">
-                  <i className="fa-solid fa-inbox text-gray-200 text-xl block mb-2" />
+                <div className="px-4 py-6 text-center text-xs text-gray-600">
+                  <i className="fa-solid fa-inbox text-gray-300 text-xl block mb-2" />
                   No applications yet. Share your gift post to get more interest!
                 </div>
               ) : (
@@ -227,12 +227,11 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
                       {/* Applicant info */}
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-xl bg-charity-100 flex items-center justify-center text-charity-600 font-extrabold text-xs shrink-0">
-                            {app.applicantName?.charAt(0).toUpperCase() ?? "?"}
+                          <div className="w-8 h-8 rounded-xl bg-charity-100 flex items-center justify-center text-charity-600 font-extrabold text-xs shrink-0">                            {app.applicantName?.charAt(0).toUpperCase() ?? "?"}
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-gray-800">{app.applicantName}</p>
-                            <p className="text-[10px] text-gray-400">{app.applicantPhone || app.applicantEmail}</p>
+                            <p className="text-xs font-bold text-black">{app.applicantName}</p>
+                            <p className="text-[10px] text-gray-600">{app.applicantPhone || app.applicantEmail}</p>
                           </div>
                         </div>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize shrink-0 ${APP_BADGE[app.status]}`}>
@@ -246,7 +245,7 @@ export default function GiverDashboard({ focusGiftId, onFocusClear }: Props) {
                       </div>
 
                       {/* Delivery preference */}
-                      <p className="text-[10px] text-gray-400 mb-2">
+                      <p className="text-[10px] text-gray-600 mb-2">
                         <i className="fa-solid fa-truck mr-1" />
                         Prefers: {app.delivery === "pickup" ? "Self Pickup" : "Dispatch Rider"}
                       </p>

@@ -47,7 +47,7 @@ export default function BottomNav({ tab, onTab, wishCount, claimCount, isLoggedI
           Give an Item
         </button>
         <button className="fab-option" onClick={() => { closeFab(); onTab("wishes"); onWish(); }}>
-          <span className="fab-icon" style={{ background: "#7c3aed" }}>
+          <span className="fab-icon" style={{ background: "#f02d6a" }}>
             <i className="fa-solid fa-wand-magic-sparkles" />
           </span>
           Make a Wish

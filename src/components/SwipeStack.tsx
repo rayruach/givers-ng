@@ -191,10 +191,10 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
                   <div className="text-[10px] uppercase font-bold tracking-wider text-charity-500 mb-1">
                     {gift.category}
                   </div>
-                  <h3 className="text-base sm:text-lg font-extrabold text-gray-800 leading-snug line-clamp-2">
+                  <h3 className="text-base sm:text-lg font-extrabold text-black leading-snug line-clamp-2">
                     {gift.title}
                   </h3>
-                  <p className="text-xs text-gray-400 line-clamp-2 mt-1 leading-relaxed">
+                  <p className="text-xs text-gray-600 line-clamp-2 mt-1 leading-relaxed">
                     {gift.description}
                   </p>
                   {gift.description && gift.description.length > 80 && (
@@ -208,8 +208,8 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
                   )}
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                  <span className="text-gray-500 font-medium truncate mr-2">
-                    Giver: <strong className="text-gray-700">{gift.donor}</strong>
+                  <span className="text-gray-700 font-medium truncate mr-2">
+                    Giver: <strong className="text-black">{gift.donor}</strong>
                   </span>
                   <span className="text-charity-500 font-semibold shrink-0">Verified ★</span>
                 </div>
@@ -230,7 +230,7 @@ export default function SwipeStack({ gifts, onClaim, onReload, onInfo, onGive }:
 
         <button
           onClick={() => top && onInfo(top)}
-          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-blue-200 text-blue-400 hover:bg-blue-500 hover:text-white flex items-center justify-center text-base sm:text-lg shadow-md active:scale-95 transition-all"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border border-gray-200 text-gray-500 hover:bg-charity-500 hover:text-white hover:border-charity-500 flex items-center justify-center text-base sm:text-lg shadow-md active:scale-95 transition-all"
           title="View full details"
         >
           <i className="fa-solid fa-info" />

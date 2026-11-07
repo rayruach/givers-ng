@@ -28,8 +28,8 @@ const TYPE_ICON: Record<string, string> = {
 
 const TYPE_COLOR: Record<string, string> = {
   selected: "text-charity-500 bg-charity-50 border-charity-200",
-  rejected: "text-gray-400 bg-gray-50 border-gray-200",
-  applied:  "text-violet-500 bg-violet-50 border-violet-200",
+  rejected: "text-gray-500 bg-gray-50 border-gray-200",
+  applied:  "text-charity-500 bg-charity-50 border-charity-200",
   paid:     "text-green-500 bg-green-50 border-green-200",
 };
 
@@ -125,34 +125,11 @@ export default function NotificationBell({
           {/* Backdrop */}
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
 
-          {/* Panel — full-width on mobile, fixed width on desktop */}
-          <div
-            className="fixed sm:absolute z-40 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-            style={{
-              // Mobile: full width with margin
-              left: "8px",
-              right: "8px",
-              top: "60px",
-              // Desktop override via sm: classes below
-            }}
-          >
-            {/* Override for sm+ */}
-            <style>{`
-              @media (min-width: 640px) {
-                .notif-panel {
-                  left: auto !important;
-                  right: 0 !important;
-                  top: 40px !important;
-                  width: 340px !important;
-                }
-              }
-            `}</style>
-            <div className="notif-panel"
-              style={{ position: "relative" }}
-            >
+          {/* Panel */}
+          <div className="fixed left-2 right-2 top-14 z-40 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden sm:absolute sm:left-auto sm:right-0 sm:top-10 sm:w-80">
 
             <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-gray-800">Notifications</h3>
+              <h3 className="text-sm font-bold text-black">Notifications</h3>
               {totalUnread > 0 && (
                 <button onClick={() => onMarkRead()}
                   className="text-[10px] text-charity-500 font-semibold hover:text-charity-600">
@@ -184,13 +161,13 @@ export default function NotificationBell({
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-gray-800 leading-snug">{n.title}</p>
-                      <p className="text-[11px] text-gray-500 leading-relaxed mt-0.5 line-clamp-2">{n.message}</p>
+                      <p className="text-xs font-bold text-black leading-snug">{n.title}</p>
+                      <p className="text-[11px] text-gray-600 leading-relaxed mt-0.5 line-clamp-2">{n.message}</p>
 
                       {/* Applied: show "View applications" CTA */}
                       {n.type === "applied" && (
-                        <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-violet-500 font-semibold">
-                          <i className="fa-solid fa-arrow-right text-[8px]" /> View all applications
+                        <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-charity-500 font-semibold">
+                          <i className="fa-solid fa-arrow-right text-[8px]" /> View applications
                         </span>
                       )}
 
@@ -204,7 +181,7 @@ export default function NotificationBell({
                         </button>
                       )}
 
-                      <p className="text-[10px] text-gray-300 mt-1.5">
+                      <p className="text-[10px] text-gray-500 mt-1.5">
                         {new Date(n.createdAt).toLocaleDateString("en-NG")}
                       </p>
                     </div>
@@ -216,7 +193,6 @@ export default function NotificationBell({
                   </div>
                 ))
               )}
-            </div>
             </div>
           </div>
         </>

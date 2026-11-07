@@ -4,8 +4,7 @@ import { giftsTable, usersTable } from "@/lib/schema";
 import { eq, ne, and, count, desc } from "drizzle-orm";
 
 export async function GET() {
-  // Count gifts per userId (only active/completed — exclude removed)
-  // Join with users to get real names
+  // Count only CLAIMED gifts per donor (actually given out, not just listed)
   const rows = await db
     .select({
       userId:    giftsTable.userId,
@@ -16,7 +15,7 @@ export async function GET() {
     .from(giftsTable)
     .leftJoin(usersTable, eq(giftsTable.userId, usersTable.id))
     .where(and(
-      ne(giftsTable.status, "removed"),
+      eq(giftsTable.status, "claimed"),
       eq(giftsTable.isAnonymous, false)
     ))
     .groupBy(giftsTable.userId, giftsTable.donor, usersTable.name)
